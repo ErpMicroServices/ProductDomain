@@ -1,0 +1,118 @@
+plugins {
+    id "com.github.node-gradle.node" version "7.0.1"
+}
+
+description = 'ProductDomain UI Components - React component library'
+
+node {
+    version = '20.10.0'
+    npmVersion = '10.2.3'
+    download = true
+    workDir = file("${project.buildDir}/nodejs")
+    npmWorkDir = file("${project.buildDir}/npm")
+    nodeProjectDir = file("${project.projectDir}")
+}
+
+// Install dependencies
+task npmInstall(type: NpmTask) {
+    args = ['install']
+    inputs.file('package.json')
+    inputs.file('package-lock.json')
+    outputs.dir('node_modules')
+}
+
+// Build the React components library
+task npmBuild(type: NpmTask) {
+    dependsOn npmInstall
+    args = ['run', 'build']
+    inputs.dir('src')
+    inputs.file('package.json')
+    inputs.file('tsconfig.json')
+    inputs.file('vite.config.ts')
+    outputs.dir('dist')
+}
+
+// Run tests
+task npmTest(type: NpmTask) {
+    dependsOn npmInstall
+    args = ['run', 'test']
+    inputs.dir('src')
+    outputs.dir("${project.buildDir}/test-results")
+}
+
+// Run linting
+task npmLint(type: NpmTask) {
+    dependsOn npmInstall
+    args = ['run', 'lint']
+    inputs.dir('src')
+}
+
+// Type checking
+task npmTypeCheck(type: NpmTask) {
+    dependsOn npmInstall
+    args = ['run', 'type-check']
+    inputs.dir('src')
+}
+
+// Run Storybook for development
+task npmStorybook(type: NpmTask) {
+    dependsOn npmInstall
+    args = ['run', 'storybook']
+}
+
+// Build Storybook for deployment
+task npmBuildStorybook(type: NpmTask) {
+    dependsOn npmInstall
+    args = ['run', 'build-storybook']
+    outputs.dir('storybook-static')
+}
+
+// Clean task
+task cleanNpm(type: Delete) {
+    delete 'node_modules', 'dist', 'storybook-static', '.cache'
+}
+
+// Integration with Gradle lifecycle
+clean.dependsOn cleanNpm
+build.dependsOn npmBuild
+test.dependsOn npmTest
+check.dependsOn npmLint, npmTypeCheck
+
+// Create a distribution artifact
+task createDistribution(type: Zip) {
+    dependsOn npmBuild
+    from 'dist'
+    archiveBaseName = 'productdomain-ui-components'
+    archiveVersion = project.version
+    destinationDirectory = file("${buildDir}/distributions")
+}
+
+// Publishing configuration (if needed)
+task publishToNpm(type: NpmTask) {
+    dependsOn npmBuild
+    args = ['publish']
+    // Only run if explicitly called
+    onlyIf {
+        project.hasProperty('publishNpm')
+    }
+}
+
+// Development server task
+task dev(type: NpmTask) {
+    dependsOn npmInstall
+    args = ['run', 'dev']
+    doFirst {
+        println "Starting UI components development server..."
+        println "Access the application at http://localhost:3000"
+    }
+}
+
+// Generate TypeScript types
+task generateTypes(type: NpmTask) {
+    dependsOn npmInstall
+    args = ['run', 'type-check']
+}
+
+artifacts {
+    archives createDistribution
+}

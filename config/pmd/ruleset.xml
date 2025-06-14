@@ -1,0 +1,113 @@
+<?xml version="1.0"?>
+<ruleset name="ProductDomain PMD Rules"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0
+         https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+    
+    <description>
+        PMD rules for ProductDomain project
+    </description>
+    
+    <!-- Best Practices -->
+    <rule ref="category/java/bestpractices.xml">
+        <exclude name="JUnitTestContainsTooManyAsserts"/>
+        <exclude name="JUnitAssertionsShouldIncludeMessage"/>
+        <exclude name="GuardLogStatement"/>
+    </rule>
+    
+    <!-- Code Style -->
+    <rule ref="category/java/codestyle.xml">
+        <exclude name="OnlyOneReturn"/>
+        <exclude name="AtLeastOneConstructor"/>
+        <exclude name="LocalVariableCouldBeFinal"/>
+        <exclude name="MethodArgumentCouldBeFinal"/>
+        <exclude name="ShortVariable"/>
+        <exclude name="LongVariable"/>
+        <exclude name="CommentDefaultAccessModifier"/>
+        <exclude name="DefaultPackage"/>
+        <exclude name="CallSuperInConstructor"/>
+        <exclude name="TooManyStaticImports"/>
+    </rule>
+    
+    <rule ref="category/java/codestyle.xml/ShortVariable">
+        <properties>
+            <property name="minimum" value="2"/>
+        </properties>
+    </rule>
+    
+    <rule ref="category/java/codestyle.xml/LongVariable">
+        <properties>
+            <property name="minimum" value="30"/>
+        </properties>
+    </rule>
+    
+    <!-- Design -->
+    <rule ref="category/java/design.xml">
+        <exclude name="LawOfDemeter"/>
+        <exclude name="LoosePackageCoupling"/>
+        <exclude name="TooManyMethods"/>
+        <exclude name="DataClass"/>
+    </rule>
+    
+    <rule ref="category/java/design.xml/TooManyMethods">
+        <properties>
+            <property name="maxmethods" value="20"/>
+        </properties>
+    </rule>
+    
+    <!-- Documentation -->
+    <rule ref="category/java/documentation.xml">
+        <exclude name="CommentRequired"/>
+        <exclude name="CommentSize"/>
+    </rule>
+    
+    <!-- Error Prone -->
+    <rule ref="category/java/errorprone.xml">
+        <exclude name="BeanMembersShouldSerialize"/>
+        <exclude name="DataflowAnomalyAnalysis"/>
+        <exclude name="AvoidLiteralsInIfCondition"/>
+    </rule>
+    
+    <!-- Multithreading -->
+    <rule ref="category/java/multithreading.xml">
+        <exclude name="DoNotUseThreads"/>
+        <exclude name="UseConcurrentHashMap"/>
+    </rule>
+    
+    <!-- Performance -->
+    <rule ref="category/java/performance.xml">
+        <exclude name="AvoidInstantiatingObjectsInLoops"/>
+    </rule>
+    
+    <!-- Security -->
+    <rule ref="category/java/security.xml"/>
+    
+    <!-- Unused Code -->
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateField"/>
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod"/>
+    <rule ref="category/java/bestpractices.xml/UnusedLocalVariable"/>
+    <rule ref="category/java/bestpractices.xml/UnusedFormalParameter"/>
+    
+    <!-- Custom rules for Spring Boot -->
+    <rule name="AvoidAutowiredField"
+          language="java"
+          message="Prefer constructor injection over field injection"
+          class="net.sourceforge.pmd.lang.rule.XPathRule">
+        <description>
+            Spring @Autowired should be used on constructors, not fields
+        </description>
+        <priority>3</priority>
+        <properties>
+            <property name="xpath">
+                <value>
+                    <![CDATA[
+                    //FieldDeclaration[
+                        Annotation/MarkerAnnotation/Name[@Image='Autowired' or @Image='javax.inject.Inject']
+                    ]
+                    ]]>
+                </value>
+            </property>
+        </properties>
+    </rule>
+</ruleset>
