@@ -1,0 +1,10 @@
+rootProject.name = 'ProductDomain'
+
+include 'database'
+include 'api'
+include 'ui-components'
+
+// Configure project directories
+project(':database').projectDir = file('database')
+project(':api').projectDir = file('api')
+project(':ui-components').projectDir = file('ui-components')
