@@ -23,7 +23,7 @@ dependencies {
     // Database
     implementation 'org.postgresql:postgresql:42.7.1'
     implementation 'org.flywaydb:flyway-core'
-    runtimeOnly 'org.flywaydb:flyway-database-postgresql'
+    runtimeOnly 'org.flywaydb:flyway-database-postgresql:10.4.1'
     
     // Connection Pooling
     implementation 'com.zaxxer:HikariCP:5.1.0'
@@ -86,37 +86,32 @@ task integrationTest(type: Test) {
     description = 'Run BDD integration tests only'
 }
 
-// Database tasks
+// Database tasks - Flyway plugin already provides these tasks:
+// flywayMigrate, flywayClean, flywayValidate, flywayInfo
+// We'll create aliases for consistency
+
 task migrateDatabase {
     group = 'database'
     description = 'Run Flyway migrations'
-    doLast {
-        flyway.migrate()
-    }
+    dependsOn flywayMigrate
 }
 
 task cleanDatabase {
-    group = 'database'
+    group = 'database' 
     description = 'Clean database (WARNING: destructive operation)'
-    doLast {
-        flyway.clean()
-    }
+    dependsOn flywayClean
 }
 
 task validateMigrations {
     group = 'database'
     description = 'Validate Flyway migrations'
-    doLast {
-        flyway.validate()
-    }
+    dependsOn flywayValidate
 }
 
 task migrationInfo {
     group = 'database'
     description = 'Show Flyway migration info'
-    doLast {
-        flyway.info()
-    }
+    dependsOn flywayInfo
 }
 
 // Ensure migrations run before tests

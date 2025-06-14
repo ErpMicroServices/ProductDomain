@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Plugin Configuration" tests="3" skipped="0" failures="0" errors="0" timestamp="2025-06-14T23:04:04" hostname="Jim-Barrows-Macbook-Pro.local" time="0.005">
+  <properties/>
+  <testcase name="Should have consistent plugin versions" classname="com.erpmicroservices.productdomain.gradle.BuildConfigurationTest$PluginConfigurationTest" time="0.003"/>
+  <testcase name="Should configure Spring Boot plugin correctly" classname="com.erpmicroservices.productdomain.gradle.BuildConfigurationTest$PluginConfigurationTest" time="0.001"/>
+  <testcase name="Should apply Java plugin to subprojects" classname="com.erpmicroservices.productdomain.gradle.BuildConfigurationTest$PluginConfigurationTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -8,6 +8,12 @@
     <property name="severity" value="warning"/>
     <property name="fileExtensions" value="java, properties, xml"/>
     
+    <!-- Suppressions -->
+    <module name="SuppressionFilter">
+        <property name="file" value="${config_loc}/suppressions.xml" default=""/>
+        <property name="optional" value="true"/>
+    </module>
+    
     <!-- Excludes all 'module-info.java' files -->
     <module name="BeforeExecutionExclusionFileFilter">
         <property name="fileNamePattern" value="module\-info\.java$"/>
@@ -16,6 +22,18 @@
     <!-- Checks for whitespace -->
     <module name="FileTabCharacter">
         <property name="eachLine" value="true"/>
+    </module>
+    
+    <!-- Miscellaneous -->
+    <module name="RegexpSingleline">
+        <property name="format" value="\s+$"/>
+        <property name="minimum" value="0"/>
+        <property name="maximum" value="0"/>
+        <property name="message" value="Line has trailing spaces."/>
+    </module>
+    
+    <module name="NewlineAtEndOfFile">
+        <property name="lineSeparator" value="lf"/>
     </module>
     
     <!-- Checks for Size Violations -->
@@ -29,6 +47,11 @@
     </module>
     
     <module name="TreeWalker">
+        <module name="SuppressionCommentFilter">
+            <property name="offCommentFormat" value="CHECKSTYLE:OFF"/>
+            <property name="onCommentFormat" value="CHECKSTYLE:ON"/>
+        </module>
+        
         <!-- Checks for Naming Conventions -->
         <module name="ConstantName"/>
         <module name="LocalFinalVariableName"/>
@@ -41,7 +64,14 @@
         <module name="TypeName"/>
         
         <!-- Checks for imports -->
-        <module name="AvoidStarImport"/>
+        <module name="AvoidStarImport">
+            <property name="excludes" value="java.util.*,java.io.*,java.net.*,org.junit.Assert.*,org.junit.jupiter.api.Assertions.*"/>
+        </module>
+        <module name="CustomImportOrder">
+            <property name="customImportOrderRules" value="STATIC###THIRD_PARTY_PACKAGE###STANDARD_JAVA_PACKAGE"/>
+            <property name="sortImportsInGroupAlphabetically" value="true"/>
+            <property name="separateLineBetweenGroups" value="true"/>
+        </module>
         <module name="IllegalImport"/>
         <module name="RedundantImport"/>
         <module name="UnusedImports">
@@ -80,9 +110,14 @@
         <module name="RightCurly"/>
         
         <!-- Checks for common coding problems -->
+        <module name="CovariantEquals"/>
+        <module name="DefaultComesLast"/>
         <module name="EmptyStatement"/>
+        <module name="EqualsAvoidNull"/>
         <module name="EqualsHashCode"/>
+        <module name="FallThrough"/>
         <module name="IllegalInstantiation"/>
+        <module name="IllegalThrows"/>
         <module name="InnerAssignment"/>
         <module name="MagicNumber">
             <property name="ignoreNumbers" value="-1, 0, 1, 2"/>
@@ -90,8 +125,13 @@
         </module>
         <module name="MissingSwitchDefault"/>
         <module name="MultipleVariableDeclarations"/>
+        <module name="NoClone"/>
+        <module name="NoFinalizer"/>
+        <module name="OneStatementPerLine"/>
         <module name="SimplifyBooleanExpression"/>
         <module name="SimplifyBooleanReturn"/>
+        <module name="StringLiteralEquality"/>
+        <module name="UnnecessaryParentheses"/>
         
         <!-- Checks for class design -->
         <module name="FinalClass"/>
@@ -112,5 +152,65 @@
             <property name="allowSamelineSingleParameterlessAnnotation" value="false"/>
             <property name="allowSamelineParameterizedAnnotation" value="false"/>
         </module>
+        <module name="AnnotationUseStyle"/>
+        <module name="MissingDeprecated"/>
+        <module name="MissingOverride"/>
+        <module name="PackageAnnotation"/>
+        
+        <!-- Javadoc Comments -->
+        <module name="AtclauseOrder">
+            <property name="tagOrder" value="@param, @return, @throws, @deprecated"/>
+        </module>
+        <module name="InvalidJavadocPosition"/>
+        <module name="JavadocMethod">
+            <property name="scope" value="public"/>
+            <property name="allowMissingParamTags" value="false"/>
+            <property name="allowMissingReturnTag" value="false"/>
+            <property name="allowedAnnotations" value="Override, Test"/>
+        </module>
+        <module name="JavadocParagraph"/>
+        <module name="JavadocStyle">
+            <property name="scope" value="public"/>
+            <property name="checkEmptyJavadoc" value="true"/>
+        </module>
+        <module name="JavadocType">
+            <property name="scope" value="public"/>
+        </module>
+        <module name="MissingJavadocMethod">
+            <property name="scope" value="public"/>
+            <property name="allowedAnnotations" value="Override, Test, Bean, Autowired"/>
+        </module>
+        <module name="MissingJavadocType">
+            <property name="scope" value="public"/>
+            <property name="excludeScope" value="nothing"/>
+        </module>
+        <module name="NonEmptyAtclauseDescription"/>
+        <module name="SingleLineJavadoc">
+            <property name="ignoreInlineTags" value="true"/>
+        </module>
+        
+        <!-- Additional checks -->
+        <module name="CommentsIndentation"/>
+        <module name="Indentation">
+            <property name="basicOffset" value="4"/>
+            <property name="braceAdjustment" value="0"/>
+            <property name="caseIndent" value="4"/>
+            <property name="throwsIndent" value="4"/>
+            <property name="lineWrappingIndentation" value="4"/>
+            <property name="arrayInitIndent" value="4"/>
+        </module>
+        <module name="OuterTypeFilename"/>
+        <module name="FinalParameters">
+            <property name="tokens" value="METHOD_DEF,CTOR_DEF,LITERAL_CATCH"/>
+        </module>
+        <module name="EmptyCatchBlock">
+            <property name="exceptionVariableName" value="expected|ignore"/>
+        </module>
+        <module name="EmptyLineSeparator">
+            <property name="allowNoEmptyLineBetweenFields" value="true"/>
+            <property name="allowMultipleEmptyLines" value="false"/>
+        </module>
+        <module name="NoLineWrap"/>
+        <module name="OneTopLevelClass"/>
     </module>
 </module>

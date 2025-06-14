@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="PMD Configuration" tests="3" skipped="0" failures="0" errors="0" timestamp="2025-06-14T23:04:04" hostname="Jim-Barrows-Macbook-Pro.local" time="0.006">
+  <properties/>
+  <testcase name="Should have valid PMD ruleset XML" classname="com.erpmicroservices.productdomain.quality.QualityConfigurationTest$PMDConfigurationTest" time="0.004"/>
+  <testcase name="Should exclude appropriate PMD rules" classname="com.erpmicroservices.productdomain.quality.QualityConfigurationTest$PMDConfigurationTest" time="0.0"/>
+  <testcase name="Should include essential PMD rule categories" classname="com.erpmicroservices.productdomain.quality.QualityConfigurationTest$PMDConfigurationTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

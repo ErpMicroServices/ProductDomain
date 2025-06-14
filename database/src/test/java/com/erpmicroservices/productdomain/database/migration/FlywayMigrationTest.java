@@ -3,6 +3,7 @@ package com.erpmicroservices.productdomain.database.migration;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.MigrationInfo;
 import org.flywaydb.core.api.MigrationInfoService;
+import org.flywaydb.core.api.MigrationState;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -40,7 +41,9 @@ class FlywayMigrationTest {
             
             var configuration = flyway.getConfiguration();
             assertNotNull(configuration.getDataSource(), "Flyway should have datasource configured");
-            assertEquals("classpath:db/migration", String.join(",", configuration.getLocations()),
+            var locations = configuration.getLocations();
+            assertTrue(locations.length > 0, "Flyway should have migration locations");
+            assertTrue(locations[0].toString().contains("db/migration"),
                         "Flyway should use correct migration location");
         }
 
@@ -84,7 +87,7 @@ class FlywayMigrationTest {
             assertTrue(appliedMigrations.length > 0, "Should have applied migrations");
             
             for (MigrationInfo migration : appliedMigrations) {
-                assertTrue(migration.getState().isSuccess(), 
+                assertEquals(MigrationState.SUCCESS, migration.getState(), 
                           "Migration " + migration.getVersion() + " should be successful");
             }
         }

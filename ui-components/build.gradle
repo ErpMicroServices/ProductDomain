@@ -13,11 +13,11 @@ node {
     nodeProjectDir = file("${project.projectDir}")
 }
 
-// Install dependencies
-task npmInstall(type: NpmTask) {
-    args = ['install']
+// The node plugin automatically creates npmInstall task
+// Configure it with proper inputs/outputs
+npmInstall {
     inputs.file('package.json')
-    inputs.file('package-lock.json')
+    inputs.file('package-lock.json').optional(true)
     outputs.dir('node_modules')
 }
 
@@ -68,15 +68,24 @@ task npmBuildStorybook(type: NpmTask) {
 }
 
 // Clean task
-task cleanNpm(type: Delete) {
-    delete 'node_modules', 'dist', 'storybook-static', '.cache'
+task clean(type: Delete) {
+    delete 'node_modules', 'dist', 'storybook-static', '.cache', 'build'
 }
 
-// Integration with Gradle lifecycle
-clean.dependsOn cleanNpm
-build.dependsOn npmBuild
-test.dependsOn npmTest
-check.dependsOn npmLint, npmTypeCheck
+// Build task
+task build {
+    dependsOn npmBuild
+}
+
+// Test task
+task test {
+    dependsOn npmTest
+}
+
+// Check task
+task check {
+    dependsOn npmLint, npmTypeCheck
+}
 
 // Create a distribution artifact
 task createDistribution(type: Zip) {
@@ -113,6 +122,4 @@ task generateTypes(type: NpmTask) {
     args = ['run', 'type-check']
 }
 
-artifacts {
-    archives createDistribution
-}
+// Distribution is created by the createDistribution task

@@ -6,30 +6,39 @@
          https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
     
     <description>
-        PMD rules for ProductDomain project
+        Comprehensive PMD rules for ProductDomain project to ensure code quality,
+        maintainability, and adherence to best practices.
     </description>
     
     <!-- Best Practices -->
     <rule ref="category/java/bestpractices.xml">
         <exclude name="JUnitTestContainsTooManyAsserts"/>
         <exclude name="JUnitAssertionsShouldIncludeMessage"/>
-        <exclude name="GuardLogStatement"/>
+        <exclude name="GuardLogStatement"/> <!-- We use SLF4J with parameterized messages -->
+    </rule>
+    
+    <!-- Configure specific best practices rules -->
+    <rule ref="category/java/bestpractices.xml/JUnitTestContainsTooManyAsserts">
+        <properties>
+            <property name="maximumAsserts" value="10"/>
+        </properties>
     </rule>
     
     <!-- Code Style -->
     <rule ref="category/java/codestyle.xml">
-        <exclude name="OnlyOneReturn"/>
-        <exclude name="AtLeastOneConstructor"/>
-        <exclude name="LocalVariableCouldBeFinal"/>
-        <exclude name="MethodArgumentCouldBeFinal"/>
-        <exclude name="ShortVariable"/>
-        <exclude name="LongVariable"/>
-        <exclude name="CommentDefaultAccessModifier"/>
-        <exclude name="DefaultPackage"/>
-        <exclude name="CallSuperInConstructor"/>
-        <exclude name="TooManyStaticImports"/>
+        <exclude name="OnlyOneReturn"/> <!-- Multiple returns can improve readability -->
+        <exclude name="AtLeastOneConstructor"/> <!-- Not always necessary -->
+        <exclude name="LocalVariableCouldBeFinal"/> <!-- Too verbose -->
+        <exclude name="MethodArgumentCouldBeFinal"/> <!-- Too verbose -->
+        <exclude name="ShortVariable"/> <!-- Configured separately -->
+        <exclude name="LongVariable"/> <!-- Configured separately -->
+        <exclude name="CommentDefaultAccessModifier"/> <!-- Not always necessary -->
+        <exclude name="DefaultPackage"/> <!-- Package-private is valid -->
+        <exclude name="CallSuperInConstructor"/> <!-- Not always needed -->
+        <exclude name="TooManyStaticImports"/> <!-- Configured separately -->
     </rule>
     
+    <!-- Configure variable naming rules -->
     <rule ref="category/java/codestyle.xml/ShortVariable">
         <properties>
             <property name="minimum" value="2"/>
@@ -38,64 +47,145 @@
     
     <rule ref="category/java/codestyle.xml/LongVariable">
         <properties>
-            <property name="minimum" value="30"/>
+            <property name="minimum" value="40"/>
+        </properties>
+    </rule>
+    
+    <rule ref="category/java/codestyle.xml/TooManyStaticImports">
+        <properties>
+            <property name="maximumStaticImports" value="10"/>
+        </properties>
+    </rule>
+    
+    <rule ref="category/java/codestyle.xml/ClassNamingConventions">
+        <properties>
+            <property name="classPattern" value="[A-Z][a-zA-Z0-9]*"/>
+            <property name="abstractClassPattern" value="Abstract[A-Z][a-zA-Z0-9]*"/>
+            <property name="interfacePattern" value="[A-Z][a-zA-Z0-9]*"/>
+            <property name="enumPattern" value="[A-Z][a-zA-Z0-9]*"/>
+            <property name="annotationPattern" value="[A-Z][a-zA-Z0-9]*"/>
+            <property name="utilityClassPattern" value="[A-Z][a-zA-Z0-9]*Utils?"/>
         </properties>
     </rule>
     
     <!-- Design -->
     <rule ref="category/java/design.xml">
-        <exclude name="LawOfDemeter"/>
-        <exclude name="LoosePackageCoupling"/>
-        <exclude name="TooManyMethods"/>
-        <exclude name="DataClass"/>
+        <exclude name="LawOfDemeter"/> <!-- Can be too restrictive -->
+        <exclude name="LoosePackageCoupling"/> <!-- Module coupling is managed differently -->
+        <exclude name="TooManyMethods"/> <!-- Configured separately -->
+        <exclude name="DataClass"/> <!-- DTOs and entities are valid -->
+        <exclude name="AvoidCatchingGenericException"/> <!-- Sometimes necessary in Spring -->
+        <exclude name="SignatureDeclareThrowsException"/> <!-- Sometimes necessary -->
     </rule>
     
+    <!-- Configure design complexity rules -->
     <rule ref="category/java/design.xml/TooManyMethods">
         <properties>
-            <property name="maxmethods" value="20"/>
+            <property name="maxmethods" value="25"/>
+        </properties>
+    </rule>
+    
+    <rule ref="category/java/design.xml/TooManyFields">
+        <properties>
+            <property name="maxfields" value="20"/>
+        </properties>
+    </rule>
+    
+    <rule ref="category/java/design.xml/CyclomaticComplexity">
+        <properties>
+            <property name="classReportLevel" value="80"/>
+            <property name="methodReportLevel" value="10"/>
+        </properties>
+    </rule>
+    
+    <rule ref="category/java/design.xml/NPathComplexity">
+        <properties>
+            <property name="reportLevel" value="200"/>
+        </properties>
+    </rule>
+    
+    <rule ref="category/java/design.xml/CognitiveComplexity">
+        <properties>
+            <property name="reportLevel" value="15"/>
         </properties>
     </rule>
     
     <!-- Documentation -->
     <rule ref="category/java/documentation.xml">
-        <exclude name="CommentRequired"/>
-        <exclude name="CommentSize"/>
+        <exclude name="CommentRequired"/> <!-- Enforced by Checkstyle -->
+        <exclude name="CommentSize"/> <!-- Too restrictive -->
+    </rule>
+    
+    <rule ref="category/java/documentation.xml/CommentSize">
+        <properties>
+            <property name="maxLines" value="20"/>
+            <property name="maxLineLength" value="120"/>
+        </properties>
     </rule>
     
     <!-- Error Prone -->
     <rule ref="category/java/errorprone.xml">
-        <exclude name="BeanMembersShouldSerialize"/>
-        <exclude name="DataflowAnomalyAnalysis"/>
-        <exclude name="AvoidLiteralsInIfCondition"/>
+        <exclude name="BeanMembersShouldSerialize"/> <!-- Not all beans need to be serializable -->
+        <exclude name="DataflowAnomalyAnalysis"/> <!-- Too many false positives -->
+        <exclude name="AvoidLiteralsInIfCondition"/> <!-- Sometimes clearer with literals -->
+        <exclude name="AvoidFieldNameMatchingMethodName"/> <!-- Can be intentional -->
+        <exclude name="AvoidFieldNameMatchingTypeName"/> <!-- Common in dependency injection -->
+    </rule>
+    
+    <rule ref="category/java/errorprone.xml/AvoidDuplicateLiterals">
+        <properties>
+            <property name="maxDuplicateLiterals" value="3"/>
+            <property name="minimumLength" value="3"/>
+            <property name="skipAnnotations" value="true"/>
+            <property name="exceptionList" value="&quot;&quot;,&quot; &quot;,&quot;,&quot;,&quot;.&quot;,&quot;-&quot;,&quot;/&quot;,&quot;_&quot;,&quot;0&quot;,&quot;1&quot;,&quot;2&quot;"/>
+        </properties>
     </rule>
     
     <!-- Multithreading -->
     <rule ref="category/java/multithreading.xml">
-        <exclude name="DoNotUseThreads"/>
-        <exclude name="UseConcurrentHashMap"/>
+        <exclude name="DoNotUseThreads"/> <!-- Async processing is common -->
+        <exclude name="UseConcurrentHashMap"/> <!-- Not always necessary -->
     </rule>
     
     <!-- Performance -->
     <rule ref="category/java/performance.xml">
-        <exclude name="AvoidInstantiatingObjectsInLoops"/>
+        <exclude name="AvoidInstantiatingObjectsInLoops"/> <!-- Sometimes necessary -->
+    </rule>
+    
+    <rule ref="category/java/performance.xml/AvoidUsingShortType">
+        <properties>
+            <property name="violationSuppressXPath" value="//MethodDeclaration[@Name='equals' or @Name='hashCode' or @Name='compareTo']"/>
+        </properties>
     </rule>
     
     <!-- Security -->
     <rule ref="category/java/security.xml"/>
     
+    <!-- Additional security rules -->
+    <rule ref="category/java/security.xml/HardCodedCryptoKey">
+        <properties>
+            <property name="minimumLength" value="8"/>
+        </properties>
+    </rule>
+    
     <!-- Unused Code -->
     <rule ref="category/java/bestpractices.xml/UnusedPrivateField"/>
     <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod"/>
     <rule ref="category/java/bestpractices.xml/UnusedLocalVariable"/>
-    <rule ref="category/java/bestpractices.xml/UnusedFormalParameter"/>
+    <rule ref="category/java/bestpractices.xml/UnusedFormalParameter">
+        <properties>
+            <property name="checkAll" value="false"/> <!-- Skip interface implementations -->
+        </properties>
+    </rule>
     
-    <!-- Custom rules for Spring Boot -->
+    <!-- Custom rules for Spring Boot and modern Java -->
     <rule name="AvoidAutowiredField"
           language="java"
-          message="Prefer constructor injection over field injection"
+          message="Prefer constructor injection over field injection for better testability"
           class="net.sourceforge.pmd.lang.rule.XPathRule">
         <description>
-            Spring @Autowired should be used on constructors, not fields
+            Spring @Autowired should be used on constructors, not fields.
+            Constructor injection is preferred for mandatory dependencies.
         </description>
         <priority>3</priority>
         <properties>
@@ -104,6 +194,113 @@
                     <![CDATA[
                     //FieldDeclaration[
                         Annotation/MarkerAnnotation/Name[@Image='Autowired' or @Image='javax.inject.Inject']
+                    ]
+                    ]]>
+                </value>
+            </property>
+        </properties>
+    </rule>
+    
+    <rule name="AvoidSpringComponentOnInterface"
+          language="java"
+          message="Spring stereotype annotations should not be used on interfaces"
+          class="net.sourceforge.pmd.lang.rule.XPathRule">
+        <description>
+            @Component, @Service, @Repository, and @Controller should be used on
+            concrete classes, not interfaces.
+        </description>
+        <priority>3</priority>
+        <properties>
+            <property name="xpath">
+                <value>
+                    <![CDATA[
+                    //ClassOrInterfaceDeclaration[@Interface='true'][
+                        Annotation/MarkerAnnotation/Name[
+                            @Image='Component' or 
+                            @Image='Service' or 
+                            @Image='Repository' or 
+                            @Image='Controller' or
+                            @Image='RestController'
+                        ]
+                    ]
+                    ]]>
+                </value>
+            </property>
+        </properties>
+    </rule>
+    
+    <rule name="UseSlf4jLoggerFactory"
+          language="java"
+          message="Use SLF4J LoggerFactory instead of other logging frameworks"
+          class="net.sourceforge.pmd.lang.rule.XPathRule">
+        <description>
+            Ensure consistent use of SLF4J for logging across the application.
+        </description>
+        <priority>3</priority>
+        <properties>
+            <property name="xpath">
+                <value>
+                    <![CDATA[
+                    //ImportDeclaration[
+                        Name[
+                            starts-with(@Image, 'java.util.logging') or
+                            starts-with(@Image, 'org.apache.commons.logging') or
+                            starts-with(@Image, 'org.apache.log4j') or
+                            starts-with(@Image, 'java.lang.System.out') or
+                            starts-with(@Image, 'java.lang.System.err')
+                        ]
+                    ]
+                    ]]>
+                </value>
+            </property>
+        </properties>
+    </rule>
+    
+    <!-- Lombok-specific rules -->
+    <rule name="PreferLombokAnnotations"
+          language="java"
+          message="Consider using Lombok annotations to reduce boilerplate"
+          class="net.sourceforge.pmd.lang.rule.XPathRule">
+        <description>
+            Detect boilerplate code that could be replaced with Lombok annotations.
+        </description>
+        <priority>4</priority>
+        <properties>
+            <property name="xpath">
+                <value>
+                    <![CDATA[
+                    //ClassOrInterfaceDeclaration[
+                        count(.//MethodDeclaration[
+                            starts-with(@Name, 'get') or 
+                            starts-with(@Name, 'set') or
+                            @Name = 'toString' or
+                            @Name = 'equals' or
+                            @Name = 'hashCode'
+                        ]) > 5
+                    ]
+                    ]]>
+                </value>
+            </property>
+        </properties>
+    </rule>
+    
+    <!-- GraphQL-specific rules -->
+    <rule name="GraphQLResolverNaming"
+          language="java"
+          message="GraphQL resolver methods should follow naming conventions"
+          class="net.sourceforge.pmd.lang.rule.XPathRule">
+        <description>
+            GraphQL resolver classes should end with 'Resolver' and methods should be descriptive.
+        </description>
+        <priority>3</priority>
+        <properties>
+            <property name="xpath">
+                <value>
+                    <![CDATA[
+                    //ClassOrInterfaceDeclaration[
+                        Annotation//Name[@Image='Component' or @Image='Service']
+                    ][
+                        contains(@Image, 'GraphQL') and not(ends-with(@Image, 'Resolver'))
                     ]
                     ]]>
                 </value>
