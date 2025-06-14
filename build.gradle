@@ -2,6 +2,10 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.2.0' apply false
     id 'io.spring.dependency-management' version '1.1.4' apply false
+    id 'com.github.spotbugs' version '6.0.4' apply false
+    id 'checkstyle'
+    id 'pmd'
+    id 'jacoco'
 }
 
 allprojects {
@@ -10,34 +14,208 @@ allprojects {
     
     repositories {
         mavenCentral()
+        maven { url 'https://repo.spring.io/milestone' }
+        maven { url 'https://repo.spring.io/snapshot' }
     }
 }
 
 subprojects {
-    apply plugin: 'java'
-    
-    java {
-        sourceCompatibility = '21'
-        targetCompatibility = '21'
+    // Only apply Java plugins to Java modules
+    if (name != 'ui-components') {
+        apply plugin: 'java'
+        apply plugin: 'java-library'
+        apply plugin: 'io.spring.dependency-management'
+        apply plugin: 'checkstyle'
+        apply plugin: 'pmd'
+        apply plugin: 'com.github.spotbugs'
+        apply plugin: 'jacoco'
     }
     
-    configurations {
-        compileOnly {
-            extendsFrom annotationProcessor
+    // Java configuration only for Java modules
+    if (name != 'ui-components') {
+        java {
+            sourceCompatibility = '21'
+            targetCompatibility = '21'
+            withJavadocJar()
+            withSourcesJar()
         }
+    }
+    
+    // Java-specific configuration
+    if (name != 'ui-components') {
+        configurations {
+            compileOnly {
+                extendsFrom annotationProcessor
+            }
+        }
+        
+        // Dependency management
+        dependencyManagement {
+            imports {
+                mavenBom "org.springframework.boot:spring-boot-dependencies:3.2.0"
+            }
+        }
+        
+        // Common dependencies for all Java modules
+        dependencies {
+            // Lombok
+            compileOnly 'org.projectlombok:lombok'
+            annotationProcessor 'org.projectlombok:lombok'
+            
+            // Testing
+            testImplementation 'org.springframework.boot:spring-boot-starter-test'
+            testImplementation 'org.junit.jupiter:junit-jupiter'
+            testImplementation 'org.mockito:mockito-junit-jupiter'
+            testImplementation 'org.assertj:assertj-core'
+            
+            // Logging
+            implementation 'org.slf4j:slf4j-api'
+        }
+        
+        // Test configuration
+        test {
+            useJUnitPlatform()
+            maxHeapSize = '1G'
+            
+            testLogging {
+                events "passed", "skipped", "failed"
+                exceptionFormat "full"
+            }
+            
+            finalizedBy jacocoTestReport
+        }
+        
+        // JaCoCo configuration
+        jacoco {
+            toolVersion = '0.8.11'
+        }
+        
+        jacocoTestReport {
+            dependsOn test
+            reports {
+                xml.required = true
+                html.required = true
+                csv.required = false
+            }
+        }
+        
+        // Checkstyle configuration
+        checkstyle {
+            toolVersion = '10.12.5'
+            configFile = rootProject.file('config/checkstyle/checkstyle.xml')
+            ignoreFailures = false
+            maxWarnings = 0
+        }
+        
+        // PMD configuration
+        pmd {
+            toolVersion = '6.55.0'
+            consoleOutput = true
+            ignoreFailures = false
+            ruleSetFiles = files(rootProject.file('config/pmd/ruleset.xml'))
+            ruleSets = []
+        }
+        
+        // SpotBugs configuration
+        spotbugs {
+            toolVersion = '4.8.2'
+            ignoreFailures = false
+            excludeFilter = rootProject.file('config/spotbugs/exclude.xml')
+        }
+        
+        spotbugsMain {
+            reports {
+                html {
+                    required = true
+                    outputLocation = file("$buildDir/reports/spotbugs/main.html")
+                    stylesheet = 'fancy-hist.xsl'
+                }
+            }
+        }
+        
+        spotbugsTest {
+            reports {
+                html {
+                    required = true
+                    outputLocation = file("$buildDir/reports/spotbugs/test.html")
+                    stylesheet = 'fancy-hist.xsl'
+                }
+            }
+        }
+    }
+}
+
+// Configure modules that use Spring Boot
+configure(subprojects.findAll { it.name in ['api', 'database'] }) {
+    apply plugin: 'org.springframework.boot'
+    
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter'
+        implementation 'org.springframework.boot:spring-boot-configuration-processor'
+        annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    }
+    
+    bootJar {
+        enabled = true
+    }
+    
+    jar {
+        enabled = true
     }
 }
 
 // Root project tasks
 task buildAll {
-    dependsOn subprojects.build
+    description = 'Build all modules'
+    group = 'build'
+    dependsOn subprojects.findAll { it.tasks.findByName('build') }*.build
 }
 
 task testAll {
-    dependsOn subprojects.test
+    description = 'Run tests in all modules'
+    group = 'verification'
+    dependsOn subprojects.findAll { it.tasks.findByName('test') }*.test
 }
 
+task checkAll {
+    description = 'Run all quality checks'
+    group = 'verification'
+    dependsOn subprojects.findAll { it.tasks.findByName('check') }*.check
+}
+
+task cleanAll {
+    description = 'Clean all modules'
+    group = 'build'
+    dependsOn subprojects.findAll { it.tasks.findByName('clean') }*.clean
+}
+
+// Coverage report aggregation
+task jacocoRootReport(type: JacocoReport) {
+    description = 'Aggregate JaCoCo coverage reports'
+    group = 'verification'
+    
+    def javaProjects = subprojects.findAll { it.name != 'ui-components' }
+    
+    dependsOn = javaProjects.test
+    
+    sourceDirectories.from = javaProjects.sourceSets.main.allSource.srcDirs
+    classDirectories.from = javaProjects.sourceSets.main.output
+    executionData.from = javaProjects.jacocoTestReport.executionData
+    
+    reports {
+        html.required = true
+        xml.required = true
+        csv.required = false
+    }
+}
+
+// Wrapper configuration
 wrapper {
     gradleVersion = '8.5'
     distributionType = Wrapper.DistributionType.BIN
 }
+
+// Build performance configuration
+gradle.startParameter.excludedTaskNames.addAll(
+    subprojects.collect { ":${it.name}:javadoc" }
+)
