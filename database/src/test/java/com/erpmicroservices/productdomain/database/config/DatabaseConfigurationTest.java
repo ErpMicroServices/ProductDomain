@@ -194,12 +194,15 @@ class DatabaseConfigurationTest {
         }
 
         @Test
-        @DisplayName("Should support prepared statements")
-        void shouldSupportPreparedStatements() throws SQLException {
+        @DisplayName("Should create prepared statements")
+        void shouldCreatePreparedStatements() throws SQLException {
             try (Connection connection = dataSource.getConnection()) {
-                DatabaseMetaData metaData = connection.getMetaData();
-                assertTrue(metaData.supportsPreparableStatements(), 
-                          "Database should support prepared statements for performance");
+                // Test that we can create a prepared statement
+                String sql = "SELECT 1";
+                try (var statement = connection.prepareStatement(sql)) {
+                    assertNotNull(statement, "Should be able to create prepared statements");
+                    assertTrue(statement.execute(), "Prepared statement should execute successfully");
+                }
             }
         }
 

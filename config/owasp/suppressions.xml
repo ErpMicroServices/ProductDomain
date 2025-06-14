@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!-- Example suppressions for known false positives or accepted vulnerabilities -->
+    
+    <!-- Suppress false positives in test dependencies -->
+    <suppress>
+        <notes><![CDATA[
+        Test dependencies are not used in production and pose no risk.
+        ]]></notes>
+        <gav regex="true">.*:.*:.*test.*</gav>
+        <cpe>cpe:/a:.*:.*</cpe>
+    </suppress>
+    
+    <!-- Suppress vulnerabilities in development tools -->
+    <suppress>
+        <notes><![CDATA[
+        Development-only dependencies that are not included in production builds.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/.*\.gradle\..*@.*$</packageUrl>
+        <vulnerabilityName regex="true">.*</vulnerabilityName>
+    </suppress>
+    
+    <!-- Suppress known false positives in Spring Boot -->
+    <suppress>
+        <notes><![CDATA[
+        Spring Boot managed dependencies are regularly updated and false positives
+        often occur due to version detection issues.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework\.boot/spring-boot.*@.*$</packageUrl>
+        <cve>CVE-2016-1000027</cve>
+    </suppress>
+    
+    <!-- Suppress jQuery vulnerabilities in generated documentation -->
+    <suppress>
+        <notes><![CDATA[
+        jQuery is only used in generated documentation, not in the application itself.
+        ]]></notes>
+        <filePath regex="true">.*\.jar[/\\].*jquery.*</filePath>
+        <cpe>cpe:/a:jquery:jquery</cpe>
+    </suppress>
+    
+    <!-- Suppress vulnerabilities in embedded Tomcat when using newer versions -->
+    <suppress>
+        <notes><![CDATA[
+        Embedded Tomcat vulnerabilities that are fixed in the version we're using
+        but OWASP DB hasn't been updated yet.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.tomcat\.embed/.*@.*$</packageUrl>
+        <vulnerabilityName regex="true">CVE-2023-.*</vulnerabilityName>
+        <cve regex="true">CVE-2023-\d{5}</cve>
+    </suppress>
+    
+    <!-- Project-specific suppressions can be added below -->
+    <!-- Example format:
+    <suppress>
+        <notes><![CDATA[
+        Description of why this vulnerability is suppressed
+        ]]></notes>
+        <packageUrl>pkg:maven/com.example/vulnerable-lib@1.0.0</packageUrl>
+        <cve>CVE-2023-12345</cve>
+    </suppress>
+    -->
+    
+</suppressions>

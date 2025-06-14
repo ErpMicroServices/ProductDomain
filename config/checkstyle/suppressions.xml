@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+    "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+    "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+
+<suppressions>
+    <!-- Suppress checks for generated code -->
+    <suppress checks=".*" files=".*[\\/]generated[\\/].*"/>
+    <suppress checks=".*" files=".*[\\/]build[\\/].*"/>
+    
+    <!-- Suppress checks for test code -->
+    <suppress checks="JavadocMethod" files=".*Test\.java$"/>
+    <suppress checks="JavadocType" files=".*Test\.java$"/>
+    <suppress checks="MissingJavadocMethod" files=".*Test\.java$"/>
+    <suppress checks="MissingJavadocType" files=".*Test\.java$"/>
+    <suppress checks="MagicNumber" files=".*Test\.java$"/>
+    
+    <!-- Suppress checks for configuration classes -->
+    <suppress checks="HideUtilityClassConstructor" files=".*Configuration\.java$"/>
+    <suppress checks="DesignForExtension" files=".*Configuration\.java$"/>
+    
+    <!-- Suppress checks for DTOs and entities -->
+    <suppress checks="MagicNumber" files=".*Entity\.java$"/>
+    <suppress checks="MagicNumber" files=".*DTO\.java$"/>
+    <suppress checks="MagicNumber" files=".*Dto\.java$"/>
+    
+    <!-- Suppress checks for migrations -->
+    <suppress checks=".*" files=".*[\\/]db[\\/]migration[\\/].*"/>
+    
+    <!-- Suppress line length for package and import statements -->
+    <suppress checks="LineLength" files=".*\.java$" lines="1-20"/>
+    
+    <!-- Project-specific suppressions -->
+    <!-- Add project-specific suppressions below this line -->
+</suppressions>

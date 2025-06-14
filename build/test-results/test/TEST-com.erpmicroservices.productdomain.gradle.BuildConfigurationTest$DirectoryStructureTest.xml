@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Directory Structure" tests="3" skipped="0" failures="0" errors="0" timestamp="2025-06-14T23:04:04" hostname="Jim-Barrows-Macbook-Pro.local" time="0.124">
+  <properties/>
+  <testcase name="Should not have build directories in version control" classname="com.erpmicroservices.productdomain.gradle.BuildConfigurationTest$DirectoryStructureTest" time="0.121"/>
+  <testcase name="Should have standard Gradle directory layout" classname="com.erpmicroservices.productdomain.gradle.BuildConfigurationTest$DirectoryStructureTest" time="0.001"/>
+  <testcase name="Should have .gitignore for Gradle files" classname="com.erpmicroservices.productdomain.gradle.BuildConfigurationTest$DirectoryStructureTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Checkstyle Configuration" tests="3" skipped="0" failures="0" errors="0" timestamp="2025-06-14T23:04:04" hostname="Jim-Barrows-Macbook-Pro.local" time="0.612">
+  <properties/>
+  <testcase name="Should configure essential Checkstyle rules" classname="com.erpmicroservices.productdomain.quality.QualityConfigurationTest$CheckstyleConfigurationTest" time="0.001"/>
+  <testcase name="Should have valid Checkstyle XML configuration" classname="com.erpmicroservices.productdomain.quality.QualityConfigurationTest$CheckstyleConfigurationTest" time="0.61"/>
+  <testcase name="Should have reasonable limits configured" classname="com.erpmicroservices.productdomain.quality.QualityConfigurationTest$CheckstyleConfigurationTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

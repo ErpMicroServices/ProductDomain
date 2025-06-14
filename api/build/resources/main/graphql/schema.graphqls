@@ -1,0 +1,329 @@
+# ProductDomain GraphQL Schema
+scalar DateTime
+scalar BigDecimal
+scalar UUID
+
+type Query {
+    # Product queries
+    product(id: UUID!): Product
+    products(filter: ProductFilter, page: PageInput): ProductConnection!
+    productBySku(sku: String!): Product
+    
+    # Category queries
+    category(id: UUID!): Category
+    categories(filter: CategoryFilter, page: PageInput): CategoryConnection!
+    categoryTree(rootId: UUID): [Category!]!
+    
+    # Variant queries
+    productVariant(id: UUID!): ProductVariant
+    variantsBySku(sku: String!): [ProductVariant!]!
+}
+
+type Mutation {
+    # Product mutations
+    createProduct(input: CreateProductInput!): Product!
+    updateProduct(id: UUID!, input: UpdateProductInput!): Product!
+    deleteProduct(id: UUID!): Boolean!
+    
+    # Category mutations
+    createCategory(input: CreateCategoryInput!): Category!
+    updateCategory(id: UUID!, input: UpdateCategoryInput!): Category!
+    deleteCategory(id: UUID!): Boolean!
+    moveCategory(id: UUID!, newParentId: UUID): Category!
+    
+    # Variant mutations
+    createProductVariant(productId: UUID!, input: CreateVariantInput!): ProductVariant!
+    updateProductVariant(id: UUID!, input: UpdateVariantInput!): ProductVariant!
+    deleteProductVariant(id: UUID!): Boolean!
+    
+    # Product-Category associations
+    assignProductToCategory(productId: UUID!, categoryId: UUID!, isPrimary: Boolean): Boolean!
+    removeProductFromCategory(productId: UUID!, categoryId: UUID!): Boolean!
+}
+
+type Subscription {
+    # Real-time product updates
+    productUpdated(id: UUID!): Product!
+    productCreated: Product!
+    productDeleted: UUID!
+    
+    # Inventory updates
+    inventoryUpdated(productId: UUID!): InventoryUpdate!
+}
+
+# Core Types
+type Product {
+    id: UUID!
+    name: String!
+    description: String
+    sku: String!
+    price: BigDecimal!
+    cost: BigDecimal
+    status: ProductStatus!
+    weight: BigDecimal
+    dimensions: Dimensions
+    attributes: JSON
+    tags: [String!]
+    
+    # Relationships
+    variants: [ProductVariant!]!
+    categories: [Category!]!
+    primaryCategory: Category
+    
+    # Audit fields
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    createdBy: UUID!
+    updatedBy: UUID!
+}
+
+type Category {
+    id: UUID!
+    name: String!
+    description: String
+    parentId: UUID
+    parent: Category
+    children: [Category!]!
+    path: String!
+    level: Int!
+    sortOrder: Int
+    isActive: Boolean!
+    imageUrl: String
+    attributes: JSON
+    
+    # Relationships
+    products(filter: ProductFilter, page: PageInput): ProductConnection!
+    productCount: Int!
+    
+    # Audit fields
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    createdBy: UUID!
+    updatedBy: UUID!
+}
+
+type ProductVariant {
+    id: UUID!
+    product: Product!
+    name: String!
+    sku: String!
+    price: BigDecimal
+    cost: BigDecimal
+    weight: BigDecimal
+    stockQuantity: Int!
+    reservedQuantity: Int!
+    availableQuantity: Int!
+    reorderLevel: Int
+    maxStockLevel: Int
+    isActive: Boolean!
+    isDefault: Boolean!
+    attributes: JSON
+    dimensions: Dimensions
+    barcode: String
+    upc: String
+    isbn: String
+    
+    # Audit fields
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    createdBy: UUID!
+    updatedBy: UUID!
+}
+
+# Supporting Types
+type Dimensions {
+    length: BigDecimal
+    width: BigDecimal
+    height: BigDecimal
+    unit: DimensionUnit
+}
+
+type InventoryUpdate {
+    productId: UUID!
+    variantId: UUID!
+    previousQuantity: Int!
+    newQuantity: Int!
+    changeType: InventoryChangeType!
+    reason: String
+    timestamp: DateTime!
+}
+
+# Enums
+enum ProductStatus {
+    ACTIVE
+    INACTIVE
+    DISCONTINUED
+    DRAFT
+}
+
+enum DimensionUnit {
+    CENTIMETER
+    INCH
+    METER
+    FOOT
+}
+
+enum InventoryChangeType {
+    SALE
+    RESTOCK
+    ADJUSTMENT
+    RETURN
+    DAMAGE
+}
+
+# Input Types
+input CreateProductInput {
+    name: String!
+    description: String
+    sku: String!
+    price: BigDecimal!
+    cost: BigDecimal
+    status: ProductStatus
+    weight: BigDecimal
+    dimensions: DimensionsInput
+    attributes: JSON
+    tags: [String!]
+    categoryIds: [UUID!]
+    primaryCategoryId: UUID
+}
+
+input UpdateProductInput {
+    name: String
+    description: String
+    sku: String
+    price: BigDecimal
+    cost: BigDecimal
+    status: ProductStatus
+    weight: BigDecimal
+    dimensions: DimensionsInput
+    attributes: JSON
+    tags: [String!]
+}
+
+input CreateCategoryInput {
+    name: String!
+    description: String
+    parentId: UUID
+    sortOrder: Int
+    isActive: Boolean
+    imageUrl: String
+    attributes: JSON
+}
+
+input UpdateCategoryInput {
+    name: String
+    description: String
+    sortOrder: Int
+    isActive: Boolean
+    imageUrl: String
+    attributes: JSON
+}
+
+input CreateVariantInput {
+    name: String!
+    sku: String!
+    price: BigDecimal
+    cost: BigDecimal
+    weight: BigDecimal
+    stockQuantity: Int!
+    reorderLevel: Int
+    maxStockLevel: Int
+    isActive: Boolean
+    isDefault: Boolean
+    attributes: JSON
+    dimensions: DimensionsInput
+    barcode: String
+    upc: String
+    isbn: String
+}
+
+input UpdateVariantInput {
+    name: String
+    sku: String
+    price: BigDecimal
+    cost: BigDecimal
+    weight: BigDecimal
+    stockQuantity: Int
+    reorderLevel: Int
+    maxStockLevel: Int
+    isActive: Boolean
+    isDefault: Boolean
+    attributes: JSON
+    dimensions: DimensionsInput
+    barcode: String
+    upc: String
+    isbn: String
+}
+
+input DimensionsInput {
+    length: BigDecimal
+    width: BigDecimal
+    height: BigDecimal
+    unit: DimensionUnit
+}
+
+# Filter Types
+input ProductFilter {
+    searchTerm: String
+    skus: [String!]
+    status: [ProductStatus!]
+    categoryIds: [UUID!]
+    tags: [String!]
+    priceRange: PriceRangeInput
+    hasVariants: Boolean
+    createdAfter: DateTime
+    createdBefore: DateTime
+}
+
+input CategoryFilter {
+    searchTerm: String
+    parentId: UUID
+    isActive: Boolean
+    level: Int
+}
+
+input PriceRangeInput {
+    min: BigDecimal
+    max: BigDecimal
+}
+
+# Pagination Types
+input PageInput {
+    page: Int = 0
+    size: Int = 20
+    sort: [SortInput!]
+}
+
+input SortInput {
+    field: String!
+    direction: SortDirection!
+}
+
+enum SortDirection {
+    ASC
+    DESC
+}
+
+# Connection Types for Pagination
+type ProductConnection {
+    content: [Product!]!
+    pageInfo: PageInfo!
+    totalElements: Int!
+}
+
+type CategoryConnection {
+    content: [Category!]!
+    pageInfo: PageInfo!
+    totalElements: Int!
+}
+
+type PageInfo {
+    pageNumber: Int!
+    pageSize: Int!
+    totalPages: Int!
+    hasNext: Boolean!
+    hasPrevious: Boolean!
+}
+
+# JSON scalar for flexible attributes
+scalar JSON

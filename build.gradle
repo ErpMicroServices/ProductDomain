@@ -3,9 +3,30 @@ plugins {
     id 'org.springframework.boot' version '3.2.0' apply false
     id 'io.spring.dependency-management' version '1.1.4' apply false
     id 'com.github.spotbugs' version '6.0.4' apply false
+    id 'org.owasp.dependencycheck' version '9.0.7' apply false
+    id 'org.sonarqube' version '4.4.1.3373'
     id 'checkstyle'
     id 'pmd'
     id 'jacoco'
+}
+
+// Root project dependencies for quality tool tests
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
+    testImplementation 'org.assertj:assertj-core:3.24.2'
+    testImplementation 'io.cucumber:cucumber-java:7.15.0'
+    testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.15.0'
+}
+
+// Configure root project Java
+java {
+    sourceCompatibility = '21'
+    targetCompatibility = '21'
+}
+
+// Test configuration for root project
+test {
+    useJUnitPlatform()
 }
 
 allprojects {
@@ -19,6 +40,44 @@ allprojects {
     }
 }
 
+// SonarQube configuration
+sonarqube {
+    properties {
+        property "sonar.projectKey", "ProductDomain"
+        property "sonar.projectName", "Product Domain Microservice"
+        property "sonar.projectVersion", version
+        property "sonar.sourceEncoding", "UTF-8"
+        
+        // Skip compilation - we'll compile separately
+        property "sonar.gradle.skipCompile", "true"
+        
+        // Language-specific settings
+        property "sonar.java.source", "21"
+        property "sonar.java.target", "21"
+        
+        // Coverage
+        property "sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/reports/jacoco/jacocoRootReport/jacocoRootReport.xml"
+        
+        // Exclusions
+        property "sonar.exclusions", "**/generated/**,**/build/**,**/test/**,**/*Test.java,**/*Tests.java"
+        property "sonar.coverage.exclusions", "**/config/**,**/dto/**,**/entity/**,**/*Application.java"
+        
+        // Quality gates
+        property "sonar.qualitygate.wait", "true"
+        
+        // Links to other reports
+        property "sonar.java.checkstyle.reportPaths", subprojects.findAll { it.name != 'ui-components' }
+            .collect { "${it.buildDir}/reports/checkstyle/main.xml,${it.buildDir}/reports/checkstyle/test.xml" }
+            .join(',')
+        property "sonar.java.pmd.reportPaths", subprojects.findAll { it.name != 'ui-components' }
+            .collect { "${it.buildDir}/reports/pmd/main.xml,${it.buildDir}/reports/pmd/test.xml" }
+            .join(',')
+        property "sonar.java.spotbugs.reportPaths", subprojects.findAll { it.name != 'ui-components' }
+            .collect { "${it.buildDir}/reports/spotbugs/main.xml,${it.buildDir}/reports/spotbugs/test.xml" }
+            .join(',')
+    }
+}
+
 subprojects {
     // Only apply Java plugins to Java modules
     if (name != 'ui-components') {
@@ -29,6 +88,7 @@ subprojects {
         apply plugin: 'pmd'
         apply plugin: 'com.github.spotbugs'
         apply plugin: 'jacoco'
+        apply plugin: 'org.owasp.dependencycheck'
     }
     
     // Java configuration only for Java modules
@@ -142,6 +202,21 @@ subprojects {
                 }
             }
         }
+        
+        // OWASP Dependency Check configuration
+        dependencyCheck {
+            failBuildOnCVSS = 7  // Fail on high severity vulnerabilities
+            suppressionFile = rootProject.file('config/owasp/suppressions.xml')
+            analyzers {
+                assemblyEnabled = false
+                nugetconfEnabled = false
+                nodeEnabled = name == 'ui-components'
+            }
+            formats = ['HTML', 'JSON', 'JUNIT']
+            outputDirectory = file("$buildDir/reports/dependency-check")
+            scanConfigurations = ['runtimeClasspath']
+            skipConfigurations = ['checkstyle', 'pmd', 'spotbugs', 'jacocoAgent', 'jacocoAnt']
+        }
     }
 }
 
@@ -209,6 +284,127 @@ task jacocoRootReport(type: JacocoReport) {
     }
 }
 
+// Git hooks configuration
+task installGitHooks(type: Exec) {
+    description = 'Install Git hooks for the project'
+    group = 'git'
+    commandLine 'sh', './gradle/git-hooks/install-hooks.sh'
+}
+
+task uninstallGitHooks(type: Exec) {
+    description = 'Uninstall Git hooks for the project'
+    group = 'git'
+    commandLine 'sh', './gradle/git-hooks/uninstall-hooks.sh'
+}
+
+// Quality report aggregation
+task qualityReport {
+    description = 'Generate aggregated quality report'
+    group = 'verification'
+    
+    dependsOn subprojects.findAll { it.name != 'ui-components' }.collect { project ->
+        [":${project.name}:checkstyleMain", ":${project.name}:checkstyleTest",
+         ":${project.name}:pmdMain", ":${project.name}:pmdTest",
+         ":${project.name}:spotbugsMain", ":${project.name}:spotbugsTest",
+         ":${project.name}:test", ":${project.name}:jacocoTestReport"]
+    }.flatten()
+    
+    doLast {
+        def reportDir = file("$buildDir/reports/quality")
+        reportDir.mkdirs()
+        
+        def htmlReport = new File(reportDir, "index.html")
+        htmlReport.text = generateQualityReportHtml()
+        
+        println "Quality report generated at: ${htmlReport.absolutePath}"
+    }
+}
+
+// SonarQube analysis task
+task sonarqubeAnalysis {
+    description = 'Run SonarQube analysis with all quality reports'
+    group = 'verification'
+    
+    dependsOn jacocoRootReport, qualityReport
+    finalizedBy sonarqube
+    
+    doFirst {
+        println "Running SonarQube analysis..."
+        println "Make sure SonarQube server is running and configured"
+        println "Set SONAR_HOST_URL and SONAR_TOKEN environment variables or pass them as properties"
+    }
+}
+
+def generateQualityReportHtml() {
+    def timestamp = new Date().format('yyyy-MM-dd HH:mm:ss')
+    return """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ProductDomain Quality Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1, h2 { color: #333; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeeba; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        a { color: #007bff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <h1>ProductDomain Quality Report</h1>
+    <p>Generated on: ${timestamp}</p>
+    
+    <div class="section">
+        <h2>Summary</h2>
+        <p>This report aggregates results from all quality checks across the ProductDomain project.</p>
+    </div>
+    
+    <div class="section">
+        <h2>Code Quality Checks</h2>
+        <table>
+            <tr>
+                <th>Module</th>
+                <th>Checkstyle</th>
+                <th>PMD</th>
+                <th>SpotBugs</th>
+                <th>Tests</th>
+                <th>Coverage</th>
+            </tr>
+            ${subprojects.findAll { it.name != 'ui-components' }.collect { project ->
+                """
+            <tr>
+                <td>${project.name}</td>
+                <td><a href="../../../${project.name}/build/reports/checkstyle/main.html">View Report</a></td>
+                <td><a href="../../../${project.name}/build/reports/pmd/main.html">View Report</a></td>
+                <td><a href="../../../${project.name}/build/reports/spotbugs/main.html">View Report</a></td>
+                <td><a href="../../../${project.name}/build/reports/tests/test/index.html">View Report</a></td>
+                <td><a href="../../../${project.name}/build/reports/jacoco/test/html/index.html">View Report</a></td>
+            </tr>
+                """
+            }.join('')}
+        </table>
+    </div>
+    
+    <div class="section">
+        <h2>Dependency Security</h2>
+        <p><a href="../dependency-check-report.html">View OWASP Dependency Check Report</a></p>
+    </div>
+    
+    <div class="section">
+        <h2>Aggregated Coverage</h2>
+        <p><a href="../jacoco/index.html">View Aggregated JaCoCo Report</a></p>
+    </div>
+</body>
+</html>
+    """
+}
+
 // Wrapper configuration
 wrapper {
     gradleVersion = '8.5'
@@ -219,3 +415,13 @@ wrapper {
 gradle.startParameter.excludedTaskNames.addAll(
     subprojects.collect { ":${it.name}:javadoc" }
 )
+
+// Automatically install hooks after project evaluation
+gradle.projectsEvaluated {
+    if (file('.git').exists() && !file('.git/hooks/pre-commit').exists()) {
+        println "Installing Git hooks..."
+        exec {
+            commandLine 'sh', './gradle/git-hooks/install-hooks.sh'
+        }
+    }
+}

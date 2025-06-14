@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="SpotBugs Configuration" tests="3" skipped="0" failures="0" errors="0" timestamp="2025-06-14T23:04:04" hostname="Jim-Barrows-Macbook-Pro.local" time="0.019">
+  <properties/>
+  <testcase name="Should have valid SpotBugs exclude filter" classname="com.erpmicroservices.productdomain.quality.QualityConfigurationTest$SpotBugsConfigurationTest" time="0.017"/>
+  <testcase name="Should exclude generated code from SpotBugs" classname="com.erpmicroservices.productdomain.quality.QualityConfigurationTest$SpotBugsConfigurationTest" time="0.001"/>
+  <testcase name="Should exclude test classes from certain SpotBugs checks" classname="com.erpmicroservices.productdomain.quality.QualityConfigurationTest$SpotBugsConfigurationTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
