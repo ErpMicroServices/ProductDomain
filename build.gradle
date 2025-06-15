@@ -46,6 +46,13 @@ allprojects {
         maven { url 'https://repo.spring.io/milestone' }
         maven { url 'https://repo.spring.io/snapshot' }
     }
+    
+    configurations.all {
+        resolutionStrategy {
+            // Force specific versions to avoid conflicts
+            force 'org.yaml:snakeyaml:2.2'
+        }
+    }
 }
 
 // SonarQube configuration
