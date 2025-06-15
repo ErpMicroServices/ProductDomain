@@ -1,7 +1,7 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.2.0' apply false
-    id 'io.spring.dependency-management' version '1.1.4'
+    id 'org.springframework.boot' version '3.5.0' apply false
+    id 'io.spring.dependency-management' version '1.1.7'
     id 'com.github.spotbugs' version '6.0.4' apply false
     id 'org.owasp.dependencycheck' version '9.0.7' apply false
     id 'org.sonarqube' version '4.4.1.3373'
@@ -28,8 +28,8 @@ dependencies {
     testImplementation 'org.junit.platform:junit-platform-suite:1.10.1'
     
     // Spring dependencies for BDD framework
-    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.0'
-    testImplementation 'org.springframework.boot:spring-boot-starter-jdbc:3.2.0'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.5.0'
+    testImplementation 'org.springframework.boot:spring-boot-starter-jdbc:3.5.0'
 }
 
 // Configure root project Java
@@ -41,7 +41,7 @@ java {
 // Apply Spring dependency management
 dependencyManagement {
     imports {
-        mavenBom "org.springframework.boot:spring-boot-dependencies:3.2.0"
+        mavenBom "org.springframework.boot:spring-boot-dependencies:3.5.0"
     }
 }
 
@@ -149,7 +149,7 @@ subprojects {
         // Dependency management
         dependencyManagement {
             imports {
-                mavenBom "org.springframework.boot:spring-boot-dependencies:3.2.0"
+                mavenBom "org.springframework.boot:spring-boot-dependencies:3.5.0"
             }
         }
         
