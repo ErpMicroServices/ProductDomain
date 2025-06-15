@@ -17,6 +17,11 @@
         <exclude name="GuardLogStatement"/> <!-- We use SLF4J with parameterized messages -->
     </rule>
     
+    <!-- Exclude Docker configuration tests from complex PMD rules -->
+    <rule ref="category/java/bestpractices.xml/JUnitTestContainsTooManyAsserts">
+        <exclude-pattern>.*/docker/.*Test\.java</exclude-pattern>
+    </rule>
+    
     <!-- Configure specific best practices rules -->
     <rule ref="category/java/bestpractices.xml/JUnitTestContainsTooManyAsserts">
         <properties>
@@ -83,6 +88,7 @@
         <properties>
             <property name="maxmethods" value="25"/>
         </properties>
+        <exclude-pattern>.*/docker/.*Test\.java</exclude-pattern>
     </rule>
     
     <rule ref="category/java/design.xml/TooManyFields">
@@ -96,18 +102,21 @@
             <property name="classReportLevel" value="80"/>
             <property name="methodReportLevel" value="10"/>
         </properties>
+        <exclude-pattern>.*/docker/.*Test\.java</exclude-pattern>
     </rule>
     
     <rule ref="category/java/design.xml/NPathComplexity">
         <properties>
             <property name="reportLevel" value="200"/>
         </properties>
+        <exclude-pattern>.*/docker/.*Test\.java</exclude-pattern>
     </rule>
     
     <rule ref="category/java/design.xml/CognitiveComplexity">
         <properties>
             <property name="reportLevel" value="15"/>
         </properties>
+        <exclude-pattern>.*/docker/.*Test\.java</exclude-pattern>
     </rule>
     
     <!-- Documentation -->

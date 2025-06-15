@@ -2,7 +2,6 @@ package com.erpmicroservices.productdomain.database.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import org.flywaydb.core.Flyway;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,8 +13,8 @@ import javax.sql.DataSource;
 /**
  * Database configuration for ProductDomain microservice.
  * 
- * Configures PostgreSQL datasource with HikariCP connection pooling
- * and Flyway database migrations.
+ * Configures PostgreSQL datasource with HikariCP connection pooling.
+ * Database schema is managed by JPA/Hibernate DDL auto-generation.
  */
 @Configuration
 public class DatabaseConfiguration {
@@ -94,22 +93,6 @@ public class DatabaseConfiguration {
         return new HikariDataSource(config);
     }
 
-    /**
-     * Configure Flyway for database migrations.
-     * 
-     * @param dataSource the configured datasource
-     * @return configured Flyway instance
-     */
-    @Bean
-    public Flyway flyway(DataSource dataSource) {
-        return Flyway.configure()
-                .dataSource(dataSource)
-                .locations("classpath:db/migration")
-                .baselineOnMigrate(true)
-                .validateOnMigrate(true)
-                .cleanDisabled(false)
-                .load();
-    }
 
     /**
      * Test-specific datasource configuration for integration tests.
@@ -144,15 +127,5 @@ public class DatabaseConfiguration {
             return new HikariDataSource(config);
         }
 
-        @Bean
-        public Flyway testFlyway(DataSource testDataSource) {
-            return Flyway.configure()
-                    .dataSource(testDataSource)
-                    .locations("classpath:db/migration", "classpath:db/test-data")
-                    .baselineOnMigrate(true)
-                    .cleanOnValidationError(true)
-                    .cleanDisabled(false)
-                    .load();
-        }
     }
 }

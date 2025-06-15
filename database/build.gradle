@@ -2,7 +2,6 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.2.0'
     id 'io.spring.dependency-management' version '1.1.4'
-    id 'org.flywaydb.flyway' version '9.22.3'
 }
 
 java {
@@ -22,8 +21,6 @@ dependencies {
     
     // Database
     implementation 'org.postgresql:postgresql:42.7.1'
-    implementation 'org.flywaydb:flyway-core'
-    runtimeOnly 'org.flywaydb:flyway-database-postgresql:10.4.1'
     
     // Connection Pooling
     implementation 'com.zaxxer:HikariCP:5.1.0'
@@ -42,15 +39,6 @@ dependencies {
     testImplementation 'org.junit.platform:junit-platform-suite:1.10.1'
 }
 
-flyway {
-    url = project.findProperty('flyway.url') ?: 'jdbc:postgresql://localhost:5432/productdomain'
-    user = project.findProperty('flyway.user') ?: 'productdomain'
-    password = project.findProperty('flyway.password') ?: 'productdomain'
-    locations = ['classpath:db/migration']
-    baselineOnMigrate = true
-    validateOnMigrate = true
-    cleanDisabled = false
-}
 
 test {
     useJUnitPlatform()
@@ -86,41 +74,11 @@ task integrationTest(type: Test) {
     description = 'Run BDD integration tests only'
 }
 
-// Database tasks - Flyway plugin already provides these tasks:
-// flywayMigrate, flywayClean, flywayValidate, flywayInfo
-// We'll create aliases for consistency
-
-task migrateDatabase {
-    group = 'database'
-    description = 'Run Flyway migrations'
-    dependsOn flywayMigrate
-}
-
-task cleanDatabase {
-    group = 'database' 
-    description = 'Clean database (WARNING: destructive operation)'
-    dependsOn flywayClean
-}
-
-task validateMigrations {
-    group = 'database'
-    description = 'Validate Flyway migrations'
-    dependsOn flywayValidate
-}
-
-task migrationInfo {
-    group = 'database'
-    description = 'Show Flyway migration info'
-    dependsOn flywayInfo
-}
-
-// Ensure migrations run before tests
-test.dependsOn migrateDatabase
-integrationTest.dependsOn migrateDatabase
+// Database schema is managed by JPA/Hibernate DDL auto-generation
 
 // Quality checks
 task qualityCheck {
     group = 'verification'
     description = 'Run all quality checks'
-    dependsOn test, validateMigrations
+    dependsOn test
 }

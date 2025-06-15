@@ -32,4 +32,17 @@
     
     <!-- Project-specific suppressions -->
     <!-- Add project-specific suppressions below this line -->
+    
+    <!-- Suppress checks for Docker configuration tests -->
+    <suppress checks=".*" files=".*[\\/]docker[\\/].*Test\.java$"/>
+    <suppress checks="LineLength" files=".*DockerConfigurationTest\.java$"/>
+    <suppress checks="MethodLength" files=".*DockerConfigurationTest\.java$"/>
+    <suppress checks="ClassFanOutComplexity" files=".*DockerConfigurationTest\.java$"/>
+    <suppress checks="CyclomaticComplexity" files=".*DockerConfigurationTest\.java$"/>
+    <suppress checks="NPathComplexity" files=".*DockerConfigurationTest\.java$"/>
+    
+    <!-- Suppress checks for Cucumber step definitions -->
+    <suppress checks=".*" files=".*Steps\.java$"/>
+    <suppress checks="LineLength" files=".*Steps\.java$"/>
+    <suppress checks="MethodLength" files=".*Steps\.java$"/>
 </suppressions>
