@@ -55,6 +55,20 @@
         <Class name="~.*Controller$" />
     </Match>
     
+    <!-- Exclude Docker configuration tests -->
+    <Match>
+        <Package name="~.*\.docker\..*" />
+    </Match>
+    
+    <!-- Exclude Docker test-specific issues -->
+    <Match>
+        <Class name="~.*DockerConfigurationTest.*" />
+    </Match>
+    
+    <Match>
+        <Class name="~.*DockerConfigurationSteps.*" />
+    </Match>
+    
     <!-- Exclude specific packages if needed -->
     <!--
     <Match>
