@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="Module Configuration" tests="3" skipped="0" failures="0" errors="0" timestamp="2025-06-14T23:04:04" hostname="Jim-Barrows-Macbook-Pro.local" time="0.002">
-  <properties/>
-  <testcase name="UI-components module structure should be prepared" classname="com.erpmicroservices.productdomain.gradle.BuildConfigurationTest$ModuleConfigurationTest" time="0.0"/>
-  <testcase name="API module structure should be prepared" classname="com.erpmicroservices.productdomain.gradle.BuildConfigurationTest$ModuleConfigurationTest" time="0.001"/>
-  <testcase name="Database module should exist with proper structure" classname="com.erpmicroservices.productdomain.gradle.BuildConfigurationTest$ModuleConfigurationTest" time="0.001"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>
