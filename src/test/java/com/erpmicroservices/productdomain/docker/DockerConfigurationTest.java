@@ -55,15 +55,16 @@ class DockerConfigurationTest {
         void shouldUseMultiStageBuild() {
             assertNotNull(content, "Dockerfile content should be loaded");
             
-            Pattern pattern = Pattern.compile("FROM .* AS \\w+");
-            Matcher matcher = pattern.matcher(content);
-            
+            // Count FROM statements with AS keyword (multi-stage indicators)
+            String[] lines = content.split("\n");
             int stageCount = 0;
-            while (matcher.find()) {
-                stageCount++;
+            for (String line : lines) {
+                if (line.trim().matches("FROM .* AS .*")) {
+                    stageCount++;
+                }
             }
             
-            assertTrue(stageCount >= 2, "Should have at least 2 build stages");
+            assertTrue(stageCount >= 2, "Should have at least 2 build stages, found: " + stageCount);
         }
         
         @Test
