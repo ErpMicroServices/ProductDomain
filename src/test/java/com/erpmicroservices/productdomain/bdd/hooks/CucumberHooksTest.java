@@ -244,7 +244,11 @@ class CucumberHooksTest {
         void shouldTrackStepExecutionTime() {
             // When
             hooks.beforeStep("When I search for products");
-            Thread.sleep(100); // Simulate step execution
+            try {
+                Thread.sleep(100); // Simulate step execution
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
             hooks.afterStep("When I search for products");
 
             // Then
