@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="Gradle Wrapper Configuration" tests="3" skipped="0" failures="0" errors="0" timestamp="2025-06-14T23:04:04" hostname="Jim-Barrows-Macbook-Pro.local" time="0.002">
-  <properties/>
-  <testcase name="Should have executable gradlew script" classname="com.erpmicroservices.productdomain.gradle.BuildConfigurationTest$GradleWrapperConfigurationTest" time="0.0"/>
-  <testcase name="Should configure Gradle 8.5 or higher" classname="com.erpmicroservices.productdomain.gradle.BuildConfigurationTest$GradleWrapperConfigurationTest" time="0.0"/>
-  <testcase name="Should have Gradle wrapper files" classname="com.erpmicroservices.productdomain.gradle.BuildConfigurationTest$GradleWrapperConfigurationTest" time="0.0"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

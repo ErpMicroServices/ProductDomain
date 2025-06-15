@@ -1,0 +1,136 @@
+version: 2
+updates:
+  # Java dependencies via Gradle
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "JimBarrows"
+    assignees:
+      - "JimBarrows"
+    labels:
+      - "dependencies"
+      - "java"
+    groups:
+      spring:
+        patterns:
+          - "org.springframework*"
+          - "io.spring*"
+      testing:
+        patterns:
+          - "*junit*"
+          - "*mockito*"
+          - "*assertj*"
+          - "*cucumber*"
+      quality:
+        patterns:
+          - "*checkstyle*"
+          - "*pmd*"
+          - "*spotbugs*"
+          - "*jacoco*"
+    ignore:
+      # Don't update major versions automatically
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
+
+  # JavaScript dependencies for UI
+  - package-ecosystem: "npm"
+    directory: "/ui-components"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "JimBarrows"
+    assignees:
+      - "JimBarrows"
+    labels:
+      - "dependencies"
+      - "javascript"
+      - "ui"
+    groups:
+      react:
+        patterns:
+          - "react*"
+          - "@types/react*"
+      testing:
+        patterns:
+          - "*jest*"
+          - "*testing-library*"
+          - "*cypress*"
+      build-tools:
+        patterns:
+          - "*vite*"
+          - "*typescript*"
+          - "*eslint*"
+          - "*prettier*"
+    ignore:
+      # Don't update major versions automatically
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+    reviewers:
+      - "JimBarrows"
+    assignees:
+      - "JimBarrows"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/api"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+    reviewers:
+      - "JimBarrows"
+    assignees:
+      - "JimBarrows"
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  - package-ecosystem: "docker"
+    directory: "/ui-components"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+    reviewers:
+      - "JimBarrows"
+    assignees:
+      - "JimBarrows"
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "chore"
+      include: "scope"

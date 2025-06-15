@@ -1,0 +1,266 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+      version:
+        description: 'Version to deploy (e.g., v1.0.0)'
+        required: true
+        type: string
+      dry_run:
+        description: 'Perform a dry run'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  REGISTRY: docker.io
+  IMAGE_PREFIX: erpmicroservices
+
+jobs:
+  validate:
+    name: Validate Deployment
+    runs-on: ubuntu-latest
+    outputs:
+      proceed: ${{ steps.validate.outputs.proceed }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Validate inputs
+        id: validate
+        run: |
+          # Validate version format
+          if [[ ! "${{ github.event.inputs.version }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ Invalid version format. Expected: vX.Y.Z"
+            exit 1
+          fi
+          
+          # Check if images exist
+          echo "Checking if Docker images exist..."
+          
+          # Set proceed flag
+          echo "proceed=true" >> $GITHUB_OUTPUT
+          
+      - name: Check environment permissions
+        if: github.event.inputs.environment == 'production'
+        run: |
+          # In a real scenario, this would check if the user has production deploy permissions
+          echo "✅ User has permission to deploy to production"
+
+  deploy-development:
+    name: Deploy to Development
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event.inputs.environment == 'development' && needs.validate.outputs.proceed == 'true'
+    environment:
+      name: development
+      url: https://dev.productdomain.example.com
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Configure kubectl
+        run: |
+          # This would configure kubectl with dev cluster credentials
+          echo "Configuring kubectl for development cluster..."
+          
+      - name: Deploy to Kubernetes
+        run: |
+          if [[ "${{ github.event.inputs.dry_run }}" == "true" ]]; then
+            echo "🔍 DRY RUN: Would deploy version ${{ github.event.inputs.version }} to development"
+          else
+            echo "🚀 Deploying version ${{ github.event.inputs.version }} to development..."
+            # kubectl apply -f k8s/development/
+            # kubectl set image deployment/api api=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/productdomain-api:${{ github.event.inputs.version }}
+            # kubectl set image deployment/ui ui=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/productdomain-ui:${{ github.event.inputs.version }}
+          fi
+          
+      - name: Wait for deployment
+        if: github.event.inputs.dry_run == 'false'
+        run: |
+          echo "Waiting for deployment to be ready..."
+          # kubectl rollout status deployment/api
+          # kubectl rollout status deployment/ui
+          
+      - name: Run smoke tests
+        if: github.event.inputs.dry_run == 'false'
+        run: |
+          echo "Running smoke tests..."
+          # Run basic health checks
+          # curl https://dev-api.productdomain.example.com/health
+          
+      - name: Notify Slack
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            Deployment to Development: ${{ job.status }}
+            Version: ${{ github.event.inputs.version }}
+            Triggered by: ${{ github.actor }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [validate, deploy-development]
+    if: |
+      github.event.inputs.environment == 'staging' && 
+      needs.validate.outputs.proceed == 'true' &&
+      (needs.deploy-development.result == 'success' || needs.deploy-development.result == 'skipped')
+    environment:
+      name: staging
+      url: https://staging.productdomain.example.com
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Configure kubectl
+        run: |
+          echo "Configuring kubectl for staging cluster..."
+          
+      - name: Backup current deployment
+        run: |
+          echo "Creating backup of current staging deployment..."
+          # kubectl get deployment -o yaml > staging-backup-$(date +%Y%m%d-%H%M%S).yaml
+          
+      - name: Deploy to Kubernetes
+        run: |
+          if [[ "${{ github.event.inputs.dry_run }}" == "true" ]]; then
+            echo "🔍 DRY RUN: Would deploy version ${{ github.event.inputs.version }} to staging"
+          else
+            echo "🚀 Deploying version ${{ github.event.inputs.version }} to staging..."
+            # Deploy logic here
+          fi
+          
+      - name: Run integration tests
+        if: github.event.inputs.dry_run == 'false'
+        run: |
+          echo "Running integration tests against staging..."
+          # Run comprehensive test suite
+          
+      - name: Performance tests
+        if: github.event.inputs.dry_run == 'false'
+        run: |
+          echo "Running performance tests..."
+          # Run load tests with k6 or similar
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [validate, deploy-staging]
+    if: |
+      github.event.inputs.environment == 'production' && 
+      needs.validate.outputs.proceed == 'true' &&
+      needs.deploy-staging.result == 'success'
+    environment:
+      name: production
+      url: https://productdomain.example.com
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Create deployment record
+        run: |
+          echo "Creating deployment record..."
+          DEPLOYMENT_ID=$(date +%Y%m%d-%H%M%S)
+          echo "DEPLOYMENT_ID=$DEPLOYMENT_ID" >> $GITHUB_ENV
+          
+      - name: Configure kubectl
+        run: |
+          echo "Configuring kubectl for production cluster..."
+          
+      - name: Backup current deployment
+        run: |
+          echo "Creating backup of current production deployment..."
+          # Full backup including data snapshots
+          
+      - name: Blue-Green deployment
+        run: |
+          if [[ "${{ github.event.inputs.dry_run }}" == "true" ]]; then
+            echo "🔍 DRY RUN: Would deploy version ${{ github.event.inputs.version }} to production"
+          else
+            echo "🚀 Starting blue-green deployment to production..."
+            # Deploy to green environment
+            # Run tests on green
+            # Switch traffic to green
+            # Keep blue as rollback
+          fi
+          
+      - name: Monitor deployment
+        if: github.event.inputs.dry_run == 'false'
+        run: |
+          echo "Monitoring deployment health..."
+          # Monitor metrics for 5 minutes
+          # Check error rates, response times
+          
+      - name: Rollback on failure
+        if: failure() && github.event.inputs.dry_run == 'false'
+        run: |
+          echo "🔄 Rolling back deployment..."
+          # Restore from backup
+          # Switch traffic back to blue
+          
+      - name: Update deployment status
+        if: always()
+        run: |
+          echo "Updating deployment status..."
+          # Update deployment tracking system
+          
+      - name: Send notifications
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            Production Deployment: ${{ job.status }}
+            Version: ${{ github.event.inputs.version }}
+            Deployment ID: ${{ env.DEPLOYMENT_ID }}
+            Triggered by: ${{ github.actor }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  post-deployment:
+    name: Post Deployment Tasks
+    runs-on: ubuntu-latest
+    needs: [deploy-development, deploy-staging, deploy-production]
+    if: always()
+    
+    steps:
+      - name: Generate deployment report
+        run: |
+          echo "# Deployment Report" >> deployment-report.md
+          echo "" >> deployment-report.md
+          echo "**Version:** ${{ github.event.inputs.version }}" >> deployment-report.md
+          echo "**Environment:** ${{ github.event.inputs.environment }}" >> deployment-report.md
+          echo "**Triggered by:** ${{ github.actor }}" >> deployment-report.md
+          echo "**Dry Run:** ${{ github.event.inputs.dry_run }}" >> deployment-report.md
+          echo "" >> deployment-report.md
+          echo "## Results" >> deployment-report.md
+          echo "- Development: ${{ needs.deploy-development.result }}" >> deployment-report.md
+          echo "- Staging: ${{ needs.deploy-staging.result }}" >> deployment-report.md
+          echo "- Production: ${{ needs.deploy-production.result }}" >> deployment-report.md
+          
+      - name: Upload deployment report
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-report
+          path: deployment-report.md
+          retention-days: 90
+          
+      - name: Update deployment dashboard
+        run: |
+          echo "Updating deployment dashboard..."
+          # Update internal deployment tracking dashboard

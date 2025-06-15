@@ -1,0 +1,264 @@
+name: Docker Build and Push
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      push:
+        description: 'Push images to registry'
+        required: false
+        default: true
+        type: boolean
+
+env:
+  REGISTRY: docker.io
+  IMAGE_PREFIX: erpmicroservices
+  
+jobs:
+  build-api:
+    name: Build API Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+      digest: ${{ steps.build.outputs.digest }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        if: github.event_name != 'pull_request'
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/productdomain-api
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,prefix={{branch}}-
+            
+      - name: Build and push API image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./api
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' && (github.event.inputs.push == 'true' || github.event_name == 'push') }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/productdomain-api:${{ steps.meta.outputs.version }}
+          format: spdx-json
+          output-file: api-sbom.json
+          
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-sbom
+          path: api-sbom.json
+          retention-days: 30
+
+  build-ui:
+    name: Build UI Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+      digest: ${{ steps.build.outputs.digest }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        if: github.event_name != 'pull_request'
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/productdomain-ui
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,prefix={{branch}}-
+            
+      - name: Build and push UI image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./ui-components
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' && (github.event.inputs.push == 'true' || github.event_name == 'push') }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/productdomain-ui:${{ steps.meta.outputs.version }}
+          format: spdx-json
+          output-file: ui-sbom.json
+          
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-sbom
+          path: ui-sbom.json
+          retention-days: 30
+
+  scan-images:
+    name: Scan Docker Images
+    runs-on: ubuntu-latest
+    needs: [build-api, build-ui]
+    if: github.event_name != 'pull_request'
+    
+    strategy:
+      matrix:
+        image: [api, ui]
+        
+    steps:
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/productdomain-${{ matrix.image }}:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-results-${{ matrix.image }}.sarif'
+          severity: 'CRITICAL,HIGH'
+          
+      - name: Upload Trivy scan results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results-${{ matrix.image }}.sarif'
+          category: 'container-scan-${{ matrix.image }}'
+          
+      - name: Run Grype vulnerability scanner
+        uses: anchore/scan-action@v3
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/productdomain-${{ matrix.image }}:${{ github.sha }}
+          fail-build: true
+          severity-cutoff: high
+          
+      - name: Upload vulnerability report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: vulnerability-report-${{ matrix.image }}
+          path: |
+            trivy-results-${{ matrix.image }}.sarif
+            *-report.json
+          retention-days: 30
+
+  sign-images:
+    name: Sign Docker Images
+    runs-on: ubuntu-latest
+    needs: [build-api, build-ui, scan-images]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+        
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          
+      - name: Sign API image
+        env:
+          COSIGN_EXPERIMENTAL: 1
+        run: |
+          cosign sign --yes \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/productdomain-api@${{ needs.build-api.outputs.digest }}
+            
+      - name: Sign UI image
+        env:
+          COSIGN_EXPERIMENTAL: 1
+        run: |
+          cosign sign --yes \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/productdomain-ui@${{ needs.build-ui.outputs.digest }}
+
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [build-api, build-ui, scan-images, sign-images]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          
+      - name: Create Release Notes
+        id: release_notes
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "# Release $VERSION" > release-notes.md
+          echo "" >> release-notes.md
+          echo "## Docker Images" >> release-notes.md
+          echo "- API: \`${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/productdomain-api:$VERSION\`" >> release-notes.md
+          echo "- UI: \`${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/productdomain-ui:$VERSION\`" >> release-notes.md
+          echo "" >> release-notes.md
+          echo "## Signatures" >> release-notes.md
+          echo "Images are signed with Sigstore/Cosign. Verify with:" >> release-notes.md
+          echo "\`\`\`bash" >> release-notes.md
+          echo "cosign verify ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/productdomain-api:$VERSION" >> release-notes.md
+          echo "cosign verify ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/productdomain-ui:$VERSION" >> release-notes.md
+          echo "\`\`\`" >> release-notes.md
+          
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: release-notes.md
+          files: |
+            artifacts/**/*-sbom.json
+            artifacts/**/*-report.json
+          generate_release_notes: true
+          draft: false
+          prerelease: false

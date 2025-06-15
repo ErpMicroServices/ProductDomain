@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="Build Optimization Tests" tests="3" skipped="0" failures="0" errors="0" timestamp="2025-06-15T17:09:55" hostname="Jim-Barrows-Macbook-Pro.local" time="0.025">
-  <properties/>
-  <testcase name="API Dockerfile should use layer caching effectively" classname="com.erpmicroservices.productdomain.docker.DockerConfigurationTest$BuildOptimizationTest" time="0.022"/>
-  <testcase name="UI Dockerfile should optimize for production build" classname="com.erpmicroservices.productdomain.docker.DockerConfigurationTest$BuildOptimizationTest" time="0.001"/>
-  <testcase name="Should use Alpine-based images where possible" classname="com.erpmicroservices.productdomain.docker.DockerConfigurationTest$BuildOptimizationTest" time="0.0"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>
