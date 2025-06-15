@@ -60,8 +60,7 @@ allprojects {
             }
         }
         
-        // Exclude android classifier from all dependencies
-        exclude group: 'org.yaml', module: 'snakeyaml', classifier: 'android'
+        // Exclude android variants will be handled by resolution strategy
     }
 }
 
