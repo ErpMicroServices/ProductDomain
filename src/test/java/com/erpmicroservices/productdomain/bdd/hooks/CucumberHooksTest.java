@@ -121,7 +121,7 @@ class CucumberHooksTest {
 
             // Then
             verify(transactionManager).getTransaction(any());
-            assertThat(testContext.get("transactionStatus")).isEqualTo(transactionStatus);
+            assertThat((Object) testContext.get("transactionStatus")).isEqualTo(transactionStatus);
         }
 
         @Test
@@ -187,7 +187,7 @@ class CucumberHooksTest {
             hooks.afterScenario(scenario);
 
             // Then
-            assertThat(testContext.get("test-key")).isNull();
+            assertThat((Object) testContext.get("test-key")).isNull();
         }
 
         @Test
@@ -267,8 +267,8 @@ class CucumberHooksTest {
             hooks.beforeApiScenario(scenario);
 
             // Then
-            assertThat(testContext.get("api-base-url")).isNotNull();
-            assertThat(testContext.get("api-client")).isNotNull();
+            assertThat((Object) testContext.get("api-base-url")).isNotNull();
+            assertThat((Object) testContext.get("api-client")).isNotNull();
         }
 
         @Test
@@ -294,8 +294,8 @@ class CucumberHooksTest {
             hooks.beforePerformanceScenario(scenario);
 
             // Then
-            assertThat(testContext.get("performance-metrics")).isNotNull();
-            assertThat(testContext.get("start-memory")).isNotNull();
+            assertThat((Object) testContext.get("performance-metrics")).isNotNull();
+            assertThat((Object) testContext.get("start-memory")).isNotNull();
         }
 
         @Test
@@ -303,7 +303,7 @@ class CucumberHooksTest {
         void shouldCollectPerformanceMetrics() {
             // Given
             when(scenario.getSourceTagNames()).thenReturn(Arrays.asList("@performance"));
-            testContext.put("performance-metrics", new PerformanceMetrics());
+            testContext.put("performance-metrics", new CucumberHooks.PerformanceMetrics());
             testContext.put("start-memory", Runtime.getRuntime().totalMemory());
 
             // When
@@ -333,7 +333,7 @@ class CucumberHooksTest {
             testContext.put("thread-specific", threadId);
 
             // Then
-            assertThat(testContext.get("thread-specific")).isEqualTo(threadId);
+            assertThat((Object) testContext.get("thread-specific")).isEqualTo(threadId);
             // Each thread should have its own context
         }
 
@@ -375,14 +375,14 @@ class CucumberHooksTest {
             // Given
             when(scenario.isFailed()).thenReturn(true);
             doThrow(new RuntimeException("Screenshot failed"))
-                .when(scenario).attach(any(), any(), any());
+                .when(scenario).attach(any(byte[].class), anyString(), anyString());
             testContext.put("test-data", "value");
 
             // When
             hooks.afterScenario(scenario);
 
             // Then
-            assertThat(testContext.get("test-data")).isNull();
+            assertThat((Object) testContext.get("test-data")).isNull();
         }
     }
 }

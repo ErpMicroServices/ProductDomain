@@ -88,9 +88,8 @@ class DatabaseCleanupUtilTest {
             List<String> tables = Arrays.asList("invalid_table");
             
             when(transactionManager.getTransaction(any())).thenReturn(transactionStatus);
-            when(jdbcTemplate.execute(anyString())).thenThrow(
-                new RuntimeException("Table not found")
-            );
+            doThrow(new RuntimeException("Table not found"))
+                .when(jdbcTemplate).execute(anyString());
 
             // When/Then
             assertThatThrownBy(() -> cleanupUtil.cleanTables(tables))

@@ -103,7 +103,7 @@ public class CucumberReportGenerator {
         
         // Configure reduction methods for cleaner reports
         configuration.addReducingMethod(ReducingMethod.HIDE_EMPTY_HOOKS);
-        configuration.addReducingMethod(ReducingMethod.MERGE_FEATURES_WITH_RERUN);
+        configuration.addReducingMethod(ReducingMethod.MERGE_FEATURES_BY_ID);
         
         // Set custom properties
         configuration.addCustomJsFiles(createCustomJavaScript());
