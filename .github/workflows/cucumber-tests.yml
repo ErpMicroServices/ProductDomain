@@ -63,7 +63,7 @@ jobs:
           gradle-version: ${{ env.GRADLE_VERSION }}
           
       - name: Cache Gradle packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
@@ -102,7 +102,7 @@ jobs:
         
       - name: Upload Cucumber reports
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cucumber-reports
           path: |
@@ -112,7 +112,7 @@ jobs:
           
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: |
@@ -210,7 +210,7 @@ jobs:
           
       - name: Upload parallel test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: parallel-cucumber-reports-${{ matrix.group }}
           path: target/cucumber-reports/
@@ -240,7 +240,7 @@ jobs:
           echo "Performance test analysis would go here"
           
       - name: Upload performance reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: performance-reports
           path: build/reports/performance/
