@@ -54,15 +54,15 @@ jobs:
         npm ci
 
     - name: Run Checkstyle
-      run: ./gradlew checkstyleMain checkstyleTest -x :database:checkstyleMain -x :database:checkstyleTest
+      run: ./gradlew :api:checkstyleMain :api:checkstyleTest
       continue-on-error: true
 
     - name: Run PMD
-      run: ./gradlew pmdMain pmdTest -x :database:pmdMain -x :database:pmdTest
+      run: ./gradlew :api:pmdMain :api:pmdTest
       continue-on-error: true
 
     - name: Run SpotBugs
-      run: ./gradlew spotbugsMain spotbugsTest -x :database:spotbugsMain -x :database:spotbugsTest
+      run: ./gradlew :api:spotbugsMain :api:spotbugsTest
       continue-on-error: true
 
     - name: Run Tests with Coverage

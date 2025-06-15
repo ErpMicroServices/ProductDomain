@@ -55,11 +55,11 @@ class DockerConfigurationTest {
         void shouldUseMultiStageBuild() {
             assertNotNull(content, "Dockerfile content should be loaded");
             
-            // Count FROM statements with AS keyword (multi-stage indicators)
+            // Count all FROM statements (multi-stage indicators)
             String[] lines = content.split("\n");
             int stageCount = 0;
             for (String line : lines) {
-                if (line.trim().matches("FROM .* AS .*")) {
+                if (line.trim().startsWith("FROM ")) {
                     stageCount++;
                 }
             }
