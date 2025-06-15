@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.2.0' apply false
-    id 'io.spring.dependency-management' version '1.1.4' apply false
+    id 'io.spring.dependency-management' version '1.1.4'
     id 'com.github.spotbugs' version '6.0.4' apply false
     id 'org.owasp.dependencycheck' version '9.0.7' apply false
     id 'org.sonarqube' version '4.4.1.3373'
@@ -16,13 +16,33 @@ dependencies {
     testImplementation 'org.assertj:assertj-core:3.24.2'
     testImplementation 'io.cucumber:cucumber-java:7.15.0'
     testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.15.0'
-    testImplementation 'org.yaml:snakeyaml:2.2'
+    testImplementation 'io.cucumber:cucumber-spring:7.15.0'
+    testImplementation 'org.yaml:snakeyaml:2.0'
+    testImplementation('com.github.javafaker:javafaker:1.0.2') {
+        exclude group: 'org.yaml', module: 'snakeyaml'
+    }
+    testImplementation 'org.mockito:mockito-core:5.7.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.7.0'
+    testImplementation 'net.masterthought:cucumber-reporting:5.7.7'
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.15.3'
+    testImplementation 'org.junit.platform:junit-platform-suite:1.10.1'
+    
+    // Spring dependencies for BDD framework
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.0'
+    testImplementation 'org.springframework.boot:spring-boot-starter-jdbc:3.2.0'
 }
 
 // Configure root project Java
 java {
     sourceCompatibility = '21'
     targetCompatibility = '21'
+}
+
+// Apply Spring dependency management
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.boot:spring-boot-dependencies:3.2.0"
+    }
 }
 
 // Test configuration for root project
@@ -38,6 +58,22 @@ allprojects {
         mavenCentral()
         maven { url 'https://repo.spring.io/milestone' }
         maven { url 'https://repo.spring.io/snapshot' }
+    }
+    
+    configurations.all {
+        resolutionStrategy {
+            // Force specific versions to avoid conflicts
+            force 'org.yaml:snakeyaml:2.0'
+            // Exclude android variants
+            eachDependency { DependencyResolveDetails details ->
+                if (details.requested.group == 'org.yaml' && details.requested.name == 'snakeyaml') {
+                    details.useVersion '2.0'
+                    details.because 'Force standard SnakeYAML version'
+                }
+            }
+        }
+        
+        // Exclude android variants will be handled by resolution strategy
     }
 }
 
@@ -319,6 +355,53 @@ task qualityReport {
         
         println "Quality report generated at: ${htmlReport.absolutePath}"
     }
+}
+
+// Cucumber report generation
+task generateCucumberReports(type: JavaExec) {
+    description = 'Generate Cucumber HTML reports from JSON output'
+    group = 'reporting'
+    
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.erpmicroservices.productdomain.bdd.reporting.CucumberReportGenerator'
+    
+    args = [
+        "${buildDir}/cucumber-html-reports",
+        project.name,
+        System.getenv('BUILD_NUMBER') ?: 'local'
+    ]
+    
+    doFirst {
+        // Ensure JSON reports exist
+        def jsonReports = fileTree(dir: 'target/cucumber-reports', include: '*.json')
+        if (jsonReports.empty) {
+            logger.warn("No Cucumber JSON reports found. Run tests first.")
+        }
+    }
+}
+
+// Run Cucumber tests with report generation
+task cucumberTest {
+    description = 'Run Cucumber tests and generate reports'
+    group = 'verification'
+    
+    dependsOn test
+    finalizedBy generateCucumberReports
+}
+
+// Configure test task to generate Cucumber reports
+test {
+    useJUnitPlatform {
+        includeTags 'cucumber'
+    }
+    
+    // Ensure Cucumber reports directory exists
+    doFirst {
+        file('target/cucumber-reports').mkdirs()
+    }
+    
+    // Generate reports after test execution
+    finalizedBy generateCucumberReports
 }
 
 // SonarQube analysis task
