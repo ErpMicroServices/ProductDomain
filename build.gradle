@@ -17,7 +17,7 @@ dependencies {
     testImplementation 'io.cucumber:cucumber-java:7.15.0'
     testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.15.0'
     testImplementation 'io.cucumber:cucumber-spring:7.15.0'
-    testImplementation 'org.yaml:snakeyaml:2.2'
+    testImplementation 'org.yaml:snakeyaml:2.0'
     testImplementation 'com.github.javafaker:javafaker:1.0.2'
     testImplementation 'org.mockito:mockito-core:5.7.0'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.7.0'
@@ -50,8 +50,18 @@ allprojects {
     configurations.all {
         resolutionStrategy {
             // Force specific versions to avoid conflicts
-            force 'org.yaml:snakeyaml:2.2'
+            force 'org.yaml:snakeyaml:2.0'
+            // Exclude android variants
+            eachDependency { DependencyResolveDetails details ->
+                if (details.requested.group == 'org.yaml' && details.requested.name == 'snakeyaml') {
+                    details.useVersion '2.0'
+                    details.because 'Force standard SnakeYAML version'
+                }
+            }
         }
+        
+        // Exclude android classifier from all dependencies
+        exclude group: 'org.yaml', module: 'snakeyaml', classifier: 'android'
     }
 }
 

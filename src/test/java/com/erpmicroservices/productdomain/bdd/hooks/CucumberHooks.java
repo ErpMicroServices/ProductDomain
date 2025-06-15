@@ -257,7 +257,12 @@ public class CucumberHooks {
             Throwable error = testContext.getError();
             if (error != null) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                error.printStackTrace(new PrintStream(baos));
+                PrintStream ps = new PrintStream(baos);
+                ps.println(error.getMessage());
+                ps.println("Stack trace:");
+                for (StackTraceElement element : error.getStackTrace()) {
+                    ps.println("  at " + element);
+                }
                 scenario.attach(baos.toByteArray(), "text/plain", "error-stacktrace.txt");
             }
         } catch (Exception e) {
