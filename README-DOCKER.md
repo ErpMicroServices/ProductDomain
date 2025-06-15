@@ -71,7 +71,7 @@ The ProductDomain microservice uses Docker for containerization with separate co
    - Version: 16-alpine
    - Port: 5432
    - Volume: postgres_data
-   - Includes Flyway migrations on startup
+   - Database schema managed by JPA/Hibernate
 
 2. **Redis Cache**
    - Version: 7-alpine
