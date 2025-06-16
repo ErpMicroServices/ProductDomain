@@ -1,0 +1,35 @@
+# Code Owners for ProductDomain
+
+# Default owners for everything in the repo
+* @JimBarrows
+
+# API module
+/api/ @JimBarrows
+
+# Database module
+/database/ @JimBarrows
+
+# UI Components
+/ui-components/ @JimBarrows
+
+# CI/CD and GitHub configuration
+/.github/ @JimBarrows
+
+# Build configuration
+/build.gradle @JimBarrows
+/settings.gradle @JimBarrows
+*.gradle @JimBarrows
+
+# Documentation
+/docs/ @JimBarrows
+*.md @JimBarrows
+
+# Docker configuration
+Dockerfile @JimBarrows
+docker-compose*.yml @JimBarrows
+
+# Security-sensitive files
+/config/ @JimBarrows
+*.properties @JimBarrows
+*.yml @JimBarrows
+*.yaml @JimBarrows
