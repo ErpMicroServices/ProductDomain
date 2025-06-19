@@ -110,7 +110,7 @@ jobs:
           retention-days: 30
           
       - name: Publish Test Report
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2
         if: always() && matrix.module != 'ui-components'
         with:
           name: Test Results - ${{ matrix.module }}
