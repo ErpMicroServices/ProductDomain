@@ -96,23 +96,34 @@ public class DatabaseConfiguration {
 
     /**
      * Test-specific datasource configuration for integration tests.
-     * Uses H2 in-memory database for faster test execution.
+     * Uses environment-specific database configuration.
      */
     @Configuration
     @Profile("test")
     static class TestDatabaseConfiguration {
+
+        @Value("${spring.datasource.url}")
+        private String databaseUrl;
+
+        @Value("${spring.datasource.username}")
+        private String databaseUsername;
+
+        @Value("${spring.datasource.password}")
+        private String databasePassword;
+
+        @Value("${spring.datasource.driver-class-name:org.postgresql.Driver}")
+        private String databaseDriver;
 
         @Bean
         @Primary
         public DataSource testDataSource() {
             HikariConfig config = new HikariConfig();
             
-            // Use PostgreSQL for tests to ensure compatibility
-            // In real scenarios, you might use TestContainers
-            config.setJdbcUrl("jdbc:postgresql://localhost:5432/productdomain_test");
-            config.setUsername("productdomain_test");
-            config.setPassword("productdomain_test");
-            config.setDriverClassName("org.postgresql.Driver");
+            // Use configuration from properties/environment
+            config.setJdbcUrl(databaseUrl);
+            config.setUsername(databaseUsername);
+            config.setPassword(databasePassword);
+            config.setDriverClassName(databaseDriver);
             
             // Smaller pool for tests
             config.setMaximumPoolSize(5);

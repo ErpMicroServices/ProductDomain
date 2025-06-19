@@ -187,6 +187,27 @@ fi
 if has_staged_files "\.java$"; then
     echo "${YELLOW}Running Java quality checks...${NC}"
     
+    # First check if build.gradle was modified to ensure dependencies are correct
+    if has_staged_files "build\.gradle$"; then
+        echo "Checking build dependencies..."
+        # Ensure SnakeYAML is available if needed
+        if grep -r "import org.yaml.snakeyaml" src/main/java 2>/dev/null | grep -q .; then
+            if ! grep -q "implementation.*snakeyaml" build.gradle; then
+                echo "${RED}✗ SnakeYAML used in main code but not in implementation dependencies${NC}"
+                echo "Add to build.gradle: implementation 'org.yaml:snakeyaml:2.0'"
+                FAILED=1
+            fi
+        fi
+    fi
+    
+    # Ensure Java version compatibility
+    JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' | cut -d. -f1)
+    if [ "$JAVA_VERSION" -ne 21 ]; then
+        echo "${YELLOW}⚠ Warning: Using Java $JAVA_VERSION but project requires Java 21${NC}"
+        echo "  CI/CD will fail with different Java version"
+        echo "  Use: export JAVA_HOME=\$(/usr/libexec/java_home -v 21)"
+    fi
+    
     # Run Checkstyle
     echo "Running Checkstyle..."
     ./gradlew checkstyleMain checkstyleTest --daemon --parallel > /dev/null 2>&1
@@ -240,10 +261,26 @@ if has_staged_files "\.java$"; then
         MODULES=$(echo "$MODIFIED_FILES" | cut -d'/' -f1 | sort | uniq | grep -E "^(api|database)$")
         for MODULE in $MODULES; do
             echo "Running tests for $MODULE module..."
+            
+            # Special handling for database module to ensure test config is correct
+            if [ "$MODULE" = "database" ]; then
+                # Check if test configuration exists
+                if [ ! -f "database/src/test/resources/application-test.properties" ]; then
+                    echo "${RED}✗ Missing database test configuration${NC}"
+                    echo "Create database/src/test/resources/application-test.properties"
+                    FAILED=1
+                    continue
+                fi
+                
+                # For local tests, use test profile (CI will override with environment vars)
+                export SPRING_PROFILES_ACTIVE=test
+            fi
+            
             ./gradlew :$MODULE:test --daemon --parallel > /dev/null 2>&1
             if [ $? -ne 0 ]; then
                 echo "${RED}✗ Tests failed in $MODULE module${NC}"
                 echo "Run './gradlew :$MODULE:test' to see failures"
+                echo "For database tests, ensure PostgreSQL is running locally"
                 FAILED=1
             else
                 echo "${GREEN}✓ Tests passed in $MODULE module${NC}"
