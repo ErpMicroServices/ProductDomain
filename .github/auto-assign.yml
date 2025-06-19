@@ -1,0 +1,28 @@
+# Auto-assign configuration for PRs
+
+# Set to true to add reviewers to pull requests
+addReviewers: true
+
+# Set to true to add assignees to pull requests
+addAssignees: true
+
+# A list of reviewers to be added to pull requests
+reviewers:
+  - JimBarrows
+
+# A number of reviewers added to the pull request
+# Set 0 to add all the reviewers
+numberOfReviewers: 1
+
+# A list of assignees to be added to pull requests
+assignees:
+  - JimBarrows
+
+# A number of assignees to add to the pull request
+# Set to 0 to add all of the assignees
+numberOfAssignees: 1
+
+# A list of keywords to skip the auto assignment
+skipKeywords:
+  - wip
+  - draft
