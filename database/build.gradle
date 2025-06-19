@@ -20,7 +20,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-actuator'
     
     // Database
-    implementation 'org.postgresql:postgresql:42.7.1'
+    implementation 'org.postgresql:postgresql:42.7.7'
     
     // Connection Pooling
     implementation 'com.zaxxer:HikariCP:5.1.0'
