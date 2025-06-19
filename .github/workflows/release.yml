@@ -218,7 +218,7 @@ jobs:
           find docs -name "*.md" -type f -exec sed -i "s/v[0-9]\+\.[0-9]\+\.[0-9]\+/${{ needs.prepare-release.outputs.tag }}/g" {} \;
           
       - name: Create PR for documentation updates
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v7
         with:
           title: "docs: Update documentation for ${{ needs.prepare-release.outputs.version }} release"
           body: |
