@@ -26,11 +26,11 @@ has_staged_files() {
 FAILED=0
 
 # NEW: Check GitHub Actions workflow files
-if has_staged_files "\.github/workflows/.*\.ya\?ml$"; then
+if has_staged_files "\.github/workflows/.*\.ya?ml$"; then
     echo "${YELLOW}Running GitHub Actions workflow validation...${NC}"
     
     # Get list of staged workflow files
-    WORKFLOW_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep "\.github/workflows/.*\.ya\?ml$")
+    WORKFLOW_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep "\.github/workflows/.*\.ya?ml$")
     
     # Check if we have the Java validator available
     if [ -f "$PROJECT_ROOT/build/libs/productdomain-workflow-validator.jar" ]; then
@@ -47,34 +47,20 @@ if has_staged_files "\.github/workflows/.*\.ya\?ml$"; then
         # Fallback to bash validation
         echo "${BLUE}Using bash validation (Java validator not built)${NC}"
         
-        # Check for deprecated action versions
-        check_deprecated_action() {
-            local action="$1"
-            local workflow="$2"
-            local replacement=""
-            
-            case "$action" in
-                "actions/checkout@v3") replacement="actions/checkout@v4";;
-                "actions/setup-java@v3") replacement="actions/setup-java@v4";;
-                "actions/setup-node@v3") replacement="actions/setup-node@v4";;
-                "actions/setup-python@v4") replacement="actions/setup-python@v5";;
-                "actions/upload-artifact@v3") replacement="actions/upload-artifact@v4";;
-                "actions/download-artifact@v3") replacement="actions/download-artifact@v4";;
-                "actions/cache@v3") replacement="actions/cache@v4";;
-                "docker/setup-buildx-action@v2") replacement="docker/setup-buildx-action@v3";;
-                "docker/build-push-action@v4") replacement="docker/build-push-action@v5";;
-                "docker/login-action@v2") replacement="docker/login-action@v3";;
-                "docker/metadata-action@v4") replacement="docker/metadata-action@v5";;
-            esac
-            
-            if [ ! -z "$replacement" ]; then
-                echo "${RED}✗ Found deprecated action: $action${NC}"
-                echo "  ${YELLOW}→ Update to: $replacement${NC}"
-                echo "  Fix command: sed -i '' 's|$action|$replacement|g' $workflow"
-                return 1
-            fi
-            return 0
-        }
+        # Known deprecated action versions
+        declare -A DEPRECATED_VERSIONS=(
+            ["actions/checkout@v3"]="actions/checkout@v4"
+            ["actions/setup-java@v3"]="actions/setup-java@v4"
+            ["actions/setup-node@v3"]="actions/setup-node@v4"
+            ["actions/setup-python@v4"]="actions/setup-python@v5"
+            ["actions/upload-artifact@v3"]="actions/upload-artifact@v4"
+            ["actions/download-artifact@v3"]="actions/download-artifact@v4"
+            ["actions/cache@v3"]="actions/cache@v4"
+            ["docker/setup-buildx-action@v2"]="docker/setup-buildx-action@v3"
+            ["docker/build-push-action@v4"]="docker/build-push-action@v5"
+            ["docker/login-action@v2"]="docker/login-action@v3"
+            ["docker/metadata-action@v4"]="docker/metadata-action@v5"
+        )
         
         for WORKFLOW in $WORKFLOW_FILES; do
             echo "Checking $WORKFLOW..."
@@ -98,11 +84,12 @@ if has_staged_files "\.github/workflows/.*\.ya\?ml$"; then
             fi
             
             # Check for deprecated actions
-            ACTIONS=$(grep -E "uses:\s*[^#]+" "$WORKFLOW" | sed 's/.*uses:\s*//' | tr -d ' ')
-            for ACTION in $ACTIONS; do
-                if check_deprecated_action "$ACTION" "$WORKFLOW"; then
-                    :  # Action is OK
-                else
+            for OLD_ACTION in "${!DEPRECATED_VERSIONS[@]}"; do
+                if grep -q "$OLD_ACTION" "$WORKFLOW"; then
+                    NEW_ACTION="${DEPRECATED_VERSIONS[$OLD_ACTION]}"
+                    echo "${RED}✗ Found deprecated action: $OLD_ACTION${NC}"
+                    echo "  ${YELLOW}→ Update to: $NEW_ACTION${NC}"
+                    echo "  Fix command: sed -i '' 's|$OLD_ACTION|$NEW_ACTION|g' $WORKFLOW"
                     WORKFLOW_FAILED=1
                     FAILED=1
                 fi
@@ -164,21 +151,12 @@ if has_staged_files "\.github/workflows/.*\.ya\?ml$"; then
         if [ $FAILED -ne 0 ]; then
             echo ""
             echo "${YELLOW}To fix all deprecated actions at once, run:${NC}"
-            cat << 'EOF'
-find .github/workflows -name '*.yml' -o -name '*.yaml' | while read f; do
-  sed -i '' -e 's|actions/checkout@v3|actions/checkout@v4|g' \
-            -e 's|actions/setup-java@v3|actions/setup-java@v4|g' \
-            -e 's|actions/setup-node@v3|actions/setup-node@v4|g' \
-            -e 's|actions/setup-python@v4|actions/setup-python@v5|g' \
-            -e 's|actions/upload-artifact@v3|actions/upload-artifact@v4|g' \
-            -e 's|actions/download-artifact@v3|actions/download-artifact@v4|g' \
-            -e 's|actions/cache@v3|actions/cache@v4|g' \
-            -e 's|docker/setup-buildx-action@v2|docker/setup-buildx-action@v3|g' \
-            -e 's|docker/build-push-action@v4|docker/build-push-action@v5|g' \
-            -e 's|docker/login-action@v2|docker/login-action@v3|g' \
-            -e 's|docker/metadata-action@v4|docker/metadata-action@v5|g' "$f"
-done
-EOF
+            echo "find .github/workflows -name '*.yml' -o -name '*.yaml' | while read f; do"
+            for OLD_ACTION in "${!DEPRECATED_VERSIONS[@]}"; do
+                NEW_ACTION="${DEPRECATED_VERSIONS[$OLD_ACTION]}"
+                echo "  sed -i '' 's|$OLD_ACTION|$NEW_ACTION|g' \"\$f\""
+            done
+            echo "done"
         fi
     fi
 fi
