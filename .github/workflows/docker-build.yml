@@ -173,7 +173,7 @@ jobs:
           category: 'container-scan-${{ matrix.image }}'
           
       - name: Run Grype vulnerability scanner
-        uses: anchore/scan-action@v3
+        uses: anchore/scan-action@v6
         with:
           image: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/productdomain-${{ matrix.image }}:${{ github.sha }}
           fail-build: true
