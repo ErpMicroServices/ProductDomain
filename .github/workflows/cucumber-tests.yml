@@ -106,7 +106,7 @@ jobs:
         with:
           name: cucumber-reports
           path: |
-            target/cucumber-reports/
+            build/cucumber-reports/
             build/cucumber-html-reports/
           retention-days: 30
           
@@ -125,7 +125,7 @@ jobs:
         uses: dorny/test-reporter@v2
         with:
           name: Cucumber Test Results
-          path: 'target/cucumber-reports/*.xml'
+          path: 'build/cucumber-reports/*.xml'
           reporter: java-junit
           fail-on-error: false
           
@@ -213,7 +213,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: parallel-cucumber-reports-${{ matrix.group }}
-          path: target/cucumber-reports/
+          path: build/cucumber-reports/
           retention-days: 7
 
   performance-tests:

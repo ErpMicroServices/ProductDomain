@@ -372,7 +372,7 @@ task generateCucumberReports(type: JavaExec) {
     
     doFirst {
         // Ensure JSON reports exist
-        def jsonReports = fileTree(dir: 'target/cucumber-reports', include: '*.json')
+        def jsonReports = fileTree(dir: 'build/cucumber-reports', include: '*.json')
         if (jsonReports.empty) {
             logger.warn("No Cucumber JSON reports found. Run tests first.")
         }
@@ -396,7 +396,7 @@ test {
     
     // Ensure Cucumber reports directory exists
     doFirst {
-        file('target/cucumber-reports').mkdirs()
+        file('build/cucumber-reports').mkdirs()
     }
     
     // Generate reports after test execution
