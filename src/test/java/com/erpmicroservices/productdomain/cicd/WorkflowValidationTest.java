@@ -66,7 +66,7 @@ class WorkflowValidationTest {
         void shouldValidateStepStructure() {
             Map<String, Object> step = createBasicStep();
             
-            assertThat(step).containsAnyOf("uses", "run");
+            assertThat(step.containsKey("uses") || step.containsKey("run")).isTrue();
             if (step.containsKey("uses")) {
                 assertThat(step.get("uses")).isInstanceOf(String.class);
             }

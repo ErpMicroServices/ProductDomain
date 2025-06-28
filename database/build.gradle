@@ -25,10 +25,17 @@ dependencies {
     // Connection Pooling
     implementation 'com.zaxxer:HikariCP:5.1.0'
     
+    // JSON Types for PostgreSQL - Updated for Hibernate 6
+    implementation 'io.hypersistence:hypersistence-utils-hibernate-60:3.6.1'
+    
+    // Jackson for JSON support
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    
     // Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.testcontainers:postgresql:1.21.1'
     testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
+    testImplementation 'com.h2database:h2'
     
     // Cucumber BDD Testing
     testImplementation 'io.cucumber:cucumber-java:7.23.0'
@@ -52,8 +59,13 @@ test {
         exceptionFormat "full"
     }
     
-    // Test database configuration
-    environment 'SPRING_PROFILES_ACTIVE', 'test'
+    // Test database configuration - use 'test' profile for H2 by default
+    environment 'SPRING_PROFILES_ACTIVE', System.getenv('SPRING_PROFILES_ACTIVE') ?: 'test'
+    
+    // Ensure Cucumber reports directory exists
+    doFirst {
+        file('build/cucumber-reports').mkdirs()
+    }
 }
 
 // Task to run only unit tests (exclude BDD tests)
@@ -72,6 +84,26 @@ task integrationTest(type: Test) {
     }
     group = 'verification'
     description = 'Run BDD integration tests only'
+}
+
+// Task for PostgreSQL compatibility tests (used by CI matrix)
+task postgresCompatibilityTest(type: Test) {
+    useJUnitPlatform()
+    group = 'verification'
+    description = 'Run tests against PostgreSQL database'
+    
+    // Force postgres-test profile for this task
+    environment 'SPRING_PROFILES_ACTIVE', 'postgres-test'
+    
+    // Ensure Cucumber reports directory exists
+    doFirst {
+        file('build/cucumber-reports').mkdirs()
+    }
+    
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+    }
 }
 
 // Database schema is managed by JPA/Hibernate DDL auto-generation

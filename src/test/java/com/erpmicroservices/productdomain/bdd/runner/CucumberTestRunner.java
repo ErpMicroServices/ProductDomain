@@ -14,10 +14,10 @@ import static io.cucumber.junit.platform.engine.Constants.*;
 @ConfigurationParameters({
     @ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, 
         value = "pretty," +
-                "html:target/cucumber-reports/html-report.html," +
-                "json:target/cucumber-reports/cucumber.json," +
-                "junit:target/cucumber-reports/junit-report.xml," +
-                "timeline:target/cucumber-reports/timeline"),
+                "html:build/cucumber-reports/html-report.html," +
+                "json:build/cucumber-reports/cucumber.json," +
+                "junit:build/cucumber-reports/junit-report.xml," +
+                "timeline:build/cucumber-reports/timeline"),
     @ConfigurationParameter(key = GLUE_PROPERTY_NAME, 
         value = "com.erpmicroservices.productdomain.bdd," +
                 "com.erpmicroservices.productdomain.steps," +

@@ -22,20 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     
     services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: productuser
-          POSTGRES_PASSWORD: productpass
-          POSTGRES_DB: productdomain
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      
+      # Redis service for caching tests
       redis:
         image: redis:7-alpine
         ports:
@@ -72,12 +59,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
             
-      - name: Create test database
-        run: |
-          PGPASSWORD=productpass psql -h localhost -U productuser -d productdomain -c "CREATE DATABASE productdomain_test;"
-          PGPASSWORD=productpass psql -h localhost -U productuser -d productdomain -c "CREATE USER productdomain_test WITH PASSWORD 'productdomain_test';"
-          PGPASSWORD=productpass psql -h localhost -U productuser -d productdomain -c "GRANT ALL PRIVILEGES ON DATABASE productdomain_test TO productdomain_test;"
-          
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
         
@@ -89,10 +70,8 @@ jobs:
             ./gradlew cucumberTest
           fi
         env:
+          # Use test profile for H2 by default - don't override with PostgreSQL settings
           SPRING_PROFILES_ACTIVE: test
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/productdomain_test
-          SPRING_DATASOURCE_USERNAME: productdomain_test
-          SPRING_DATASOURCE_PASSWORD: productdomain_test
           SPRING_REDIS_HOST: localhost
           SPRING_REDIS_PORT: 6379
           
@@ -106,7 +85,7 @@ jobs:
         with:
           name: cucumber-reports
           path: |
-            target/cucumber-reports/
+            build/cucumber-reports/
             build/cucumber-html-reports/
           retention-days: 30
           
@@ -125,7 +104,7 @@ jobs:
         uses: dorny/test-reporter@v2
         with:
           name: Cucumber Test Results
-          path: 'target/cucumber-reports/*.xml'
+          path: 'build/cucumber-reports/*.xml'
           reporter: java-junit
           fail-on-error: false
           
@@ -165,21 +144,6 @@ jobs:
     strategy:
       matrix:
         group: [1, 2, 3, 4]
-        
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: productuser
-          POSTGRES_PASSWORD: productpass
-          POSTGRES_DB: productdomain
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
       - name: Checkout code
@@ -191,12 +155,6 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
           
-      - name: Create test database for parallel execution
-        run: |
-          PGPASSWORD=productpass psql -h localhost -U productuser -d productdomain -c "CREATE DATABASE productdomain_test_${{ matrix.group }};"
-          PGPASSWORD=productpass psql -h localhost -U productuser -d productdomain -c "CREATE USER productdomain_test_${{ matrix.group }} WITH PASSWORD 'productdomain_test';"
-          PGPASSWORD=productpass psql -h localhost -U productuser -d productdomain -c "GRANT ALL PRIVILEGES ON DATABASE productdomain_test_${{ matrix.group }} TO productdomain_test_${{ matrix.group }};"
-          
       - name: Run parallel Cucumber tests
         run: |
           ./gradlew cucumberTest \
@@ -205,15 +163,14 @@ jobs:
             -Dcucumber.execution.parallel.config.fixed.parallelism=4 \
             -Dtest.group=${{ matrix.group }}
         env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/productdomain_test_${{ matrix.group }}
-          SPRING_DATASOURCE_USERNAME: productdomain_test_${{ matrix.group }}
+          SPRING_PROFILES_ACTIVE: test
           
       - name: Upload parallel test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: parallel-cucumber-reports-${{ matrix.group }}
-          path: target/cucumber-reports/
+          path: build/cucumber-reports/
           retention-days: 7
 
   performance-tests:

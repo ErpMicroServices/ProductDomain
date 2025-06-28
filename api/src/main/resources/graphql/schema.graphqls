@@ -6,12 +6,12 @@ scalar UUID
 type Query {
     # Product queries
     product(id: UUID!): Product
-    products(filter: ProductFilter, page: PageInput): ProductConnection!
+    products(first: Int, after: String, filter: ProductFilter, sort: [SortInput!]): ProductConnection!
     productBySku(sku: String!): Product
     
     # Category queries
     category(id: UUID!): Category
-    categories(filter: CategoryFilter, page: PageInput): CategoryConnection!
+    categories(first: Int, after: String, filter: CategoryFilter, sort: [SortInput!]): CategoryConnection!
     categoryTree(rootId: UUID): [Category!]!
     
     # Variant queries
@@ -29,6 +29,7 @@ type Mutation {
     createCategory(input: CreateCategoryInput!): Category!
     updateCategory(id: UUID!, input: UpdateCategoryInput!): Category!
     deleteCategory(id: UUID!): Boolean!
+    deleteCategories(ids: [UUID!]!): Int!
     moveCategory(id: UUID!, newParentId: UUID): Category!
     
     # Variant mutations
@@ -37,13 +38,13 @@ type Mutation {
     deleteProductVariant(id: UUID!): Boolean!
     
     # Product-Category associations
-    assignProductToCategory(productId: UUID!, categoryId: UUID!, isPrimary: Boolean): Boolean!
-    removeProductFromCategory(productId: UUID!, categoryId: UUID!): Boolean!
+    addProductToCategory(productId: UUID!, categoryId: UUID!): Product!
+    removeProductFromCategory(productId: UUID!, categoryId: UUID!): Product!
 }
 
 type Subscription {
     # Real-time product updates
-    productUpdated(id: UUID!): Product!
+    productUpdated(productId: UUID!): Product!
     productCreated: Product!
     productDeleted: UUID!
     
@@ -57,9 +58,10 @@ type Product {
     name: String!
     description: String
     sku: String!
-    price: BigDecimal!
+    price: BigDecimal
     cost: BigDecimal
-    status: ProductStatus!
+    active: Boolean!
+    status: ProductStatus
     weight: BigDecimal
     dimensions: Dimensions
     attributes: JSON
@@ -72,9 +74,9 @@ type Product {
     
     # Audit fields
     createdAt: DateTime!
-    updatedAt: DateTime!
-    createdBy: UUID!
-    updatedBy: UUID!
+    updatedAt: DateTime
+    createdBy: UUID
+    updatedBy: UUID
 }
 
 type Category {
@@ -84,6 +86,7 @@ type Category {
     parentId: UUID
     parent: Category
     children: [Category!]!
+    childrenCount: Int!
     path: String!
     level: Int!
     sortOrder: Int
@@ -92,14 +95,14 @@ type Category {
     attributes: JSON
     
     # Relationships
-    products(filter: ProductFilter, page: PageInput): ProductConnection!
+    products(first: Int, after: String, filter: ProductFilter): ProductConnection!
     productCount: Int!
     
     # Audit fields
     createdAt: DateTime!
-    updatedAt: DateTime!
-    createdBy: UUID!
-    updatedBy: UUID!
+    updatedAt: DateTime
+    createdBy: UUID
+    updatedBy: UUID
 }
 
 type ProductVariant {
@@ -176,8 +179,9 @@ input CreateProductInput {
     name: String!
     description: String
     sku: String!
-    price: BigDecimal!
+    price: BigDecimal
     cost: BigDecimal
+    active: Boolean
     status: ProductStatus
     weight: BigDecimal
     dimensions: DimensionsInput
@@ -278,6 +282,7 @@ input ProductFilter {
 input CategoryFilter {
     searchTerm: String
     parentId: UUID
+    isRoot: Boolean
     isActive: Boolean
     level: Int
 }
@@ -304,25 +309,34 @@ enum SortDirection {
     DESC
 }
 
-# Connection Types for Pagination
+# Connection Types for Relay-style Pagination
 type ProductConnection {
-    content: [Product!]!
+    edges: [ProductEdge!]!
     pageInfo: PageInfo!
-    totalElements: Int!
+    totalCount: Int!
+}
+
+type ProductEdge {
+    node: Product!
+    cursor: String!
 }
 
 type CategoryConnection {
-    content: [Category!]!
+    edges: [CategoryEdge!]!
     pageInfo: PageInfo!
-    totalElements: Int!
+    totalCount: Int!
+}
+
+type CategoryEdge {
+    node: Category!
+    cursor: String!
 }
 
 type PageInfo {
-    pageNumber: Int!
-    pageSize: Int!
-    totalPages: Int!
-    hasNext: Boolean!
-    hasPrevious: Boolean!
+    hasNextPage: Boolean!
+    hasPreviousPage: Boolean!
+    startCursor: String
+    endCursor: String
 }
 
 # JSON scalar for flexible attributes

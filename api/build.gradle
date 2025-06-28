@@ -48,8 +48,16 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'com.graphql-java-kickstart:graphql-spring-boot-starter-test:15.0.0'
     testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'com.h2database:h2'
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'io.rest-assured:rest-assured'
+    
+    // Cucumber dependencies
+    testImplementation 'io.cucumber:cucumber-java:7.23.0'
+    testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.23.0'
+    testImplementation 'io.cucumber:cucumber-spring:7.23.0'
+    testImplementation 'org.junit.platform:junit-platform-suite'
+    testImplementation 'org.junit.platform:junit-platform-suite-api'
 }
 
 // Spring Boot configuration
