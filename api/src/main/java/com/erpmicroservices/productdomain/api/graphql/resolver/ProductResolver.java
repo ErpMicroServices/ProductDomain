@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -99,6 +100,9 @@ public class ProductResolver {
         
         try {
             return productService.update(id, input);
+        } catch (OptimisticLockingFailureException e) {
+            log.error("Concurrent update detected for product {}", id, e);
+            throw new GraphQLException("Failed to update product due to concurrent update. Please retry.");
         } catch (Exception e) {
             log.error("Error updating product", e);
             throw new GraphQLException("Failed to update product: " + e.getMessage());
