@@ -384,7 +384,18 @@ task cucumberTest {
     description = 'Run Cucumber tests and generate reports'
     group = 'verification'
     
-    dependsOn test
+    // Create cucumber-reports directories for all subprojects
+    doFirst {
+        subprojects.each { subproject ->
+            file("${subproject.buildDir}/cucumber-reports").mkdirs()
+        }
+    }
+    
+    // Run tests in all subprojects that have tests
+    dependsOn subprojects.collect { subproject ->
+        subproject.tasks.findByName('test')
+    }.findAll { it != null }
+    
     finalizedBy generateCucumberReports
 }
 

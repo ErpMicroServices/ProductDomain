@@ -118,7 +118,7 @@ jobs:
       - name: Run database tests
         run: |
           chmod +x gradlew
-          ./gradlew :database:test
+          ./gradlew :database:postgresCompatibilityTest
         env:
           SPRING_PROFILES_ACTIVE: postgres-test
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/testdb
