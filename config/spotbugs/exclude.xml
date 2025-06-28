@@ -40,7 +40,7 @@
     
     <!-- Exclude null checks on @NonNull fields -->
     <Match>
-        <Field annotation="lombok.NonNull" />
+        <Field name="~.*" annotation="lombok.NonNull" />
         <Bug pattern="NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR" />
     </Match>
     

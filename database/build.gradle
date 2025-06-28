@@ -25,6 +25,12 @@ dependencies {
     // Connection Pooling
     implementation 'com.zaxxer:HikariCP:5.1.0'
     
+    // JSON Types for PostgreSQL - Updated for Hibernate 6
+    implementation 'io.hypersistence:hypersistence-utils-hibernate-60:3.6.1'
+    
+    // Jackson for JSON support
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    
     // Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.testcontainers:postgresql:1.21.1'

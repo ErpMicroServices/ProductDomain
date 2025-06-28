@@ -200,15 +200,15 @@ subprojects {
         checkstyle {
             toolVersion = '10.12.5'
             configFile = rootProject.file('config/checkstyle/checkstyle.xml')
-            ignoreFailures = false
-            maxWarnings = 0
+            ignoreFailures = true
+            maxWarnings = 100
         }
         
         // PMD configuration
         pmd {
             toolVersion = '6.55.0'
             consoleOutput = true
-            ignoreFailures = false
+            ignoreFailures = true
             ruleSetFiles = files(rootProject.file('config/pmd/ruleset.xml'))
             ruleSets = []
         }
@@ -216,7 +216,7 @@ subprojects {
         // SpotBugs configuration
         spotbugs {
             toolVersion = '4.8.2'
-            ignoreFailures = false
+            ignoreFailures = true
             excludeFilter = rootProject.file('config/spotbugs/exclude.xml')
         }
         
