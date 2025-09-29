@@ -22,7 +22,7 @@ RUN gradle bootJar --no-daemon -x test
 RUN java -Djarmode=layertools -jar build/libs/*.jar extract
 
 # Stage 2: Runtime stage
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 
 # Install dumb-init for proper signal handling
 RUN apk add --no-cache dumb-init
